@@ -14,6 +14,7 @@ import StudioSuperAdminDashboard from './STUDIO/StudioSuperAdmin/StudioSuperAdmi
 import LP2HomePage from './STUDIO/LP2/LP2HomePage';
 import { PrivacyPolicy } from './STUDIO/LP2/PrivacyPolicy';
 import { RefundPolicy } from './STUDIO/LP2/RefundPolicy';
+import { TermsOfService } from './STUDIO/LP2/TermsOfService';
 
 function App() {
 
@@ -36,8 +37,9 @@ function App() {
       <Routes>
         <Route path="/" element={<LP2HomePage />} />
         <Route path="/:name" element={<LP2HomePage />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/refund" element={<RefundPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/login-success" element={<LoginSuccess />} />

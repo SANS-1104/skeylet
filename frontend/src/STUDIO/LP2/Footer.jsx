@@ -16,7 +16,7 @@ export function Footer() {
     },
     {
       title: "Legal",
-      links: ["Privacy Policy", "Refund Policy", "Cookie Policy", "GDPR"],
+      links: ["Privacy Policy", "Refund Policy", "Terms of Service"],
     },
   ];
 
@@ -30,10 +30,14 @@ export function Footer() {
   // Helper function to handle internal routes
   const handleRoute = (link) => {
     if (link === "Privacy Policy") {
-      navigate("/privacy-policy");
+      navigate("/privacy");
     } else if (link === "Refund Policy") {
       navigate("/refund");
-    } else {
+    } 
+    else if (link === "Terms of Service") {
+      navigate("/terms");
+    }
+      else {
       // You can handle other links or scroll to section if needed
       console.log(`${link} clicked`);
     }
@@ -111,7 +115,7 @@ export function Footer() {
           <p className="text-slate-400 text-sm">© 2025 Skeylet. All rights reserved.</p>
           <div className="flex gap-6 text-sm text-slate-400">
             <motion.a
-              onClick={() => navigate("/privacy-policy")}
+              onClick={() => navigate("/privacy")}
               whileHover={{ scale: 1.05 }}
               className="hover:text-white transition-colors cursor-pointer"
             >
