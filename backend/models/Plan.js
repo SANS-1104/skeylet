@@ -5,13 +5,13 @@ const PlanSchema = new Schema(
   {
     name: {
       type: String,
-      enum: ["pro", "advanced", "custom"],
+      enum: ["pro"],
       required: true,
       unique: true,
     },
     monthlyQuota: { type: Number, required: true },
-    monthlyPrice: { type: Number, default: 0 }, 
-    yearlyPrice: { type: Number, default: 0 }, 
+    yearlyPriceOld: { type: Number, default: 200 }, 
+    yearlyPriceNew: { type: Number, default: 49 }, 
     features: [{ type: String }], // optional, store feature list
   },
   { timestamps: true }
