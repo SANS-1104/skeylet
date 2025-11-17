@@ -9,12 +9,14 @@ import {
   cancelScheduledPost,
   reschedulePost
 } from "../controllers/postController.js";
+import { checkQuota } from "../middleware/quotaMiddleware.js";
+
 
 const router = express.Router();
 
-router.post("/create", authenticateUser, createPost);
-router.post("/manualPost", authenticateUser, manualPost);
-router.post("/schedule", authenticateUser, schedulePost);
+router.post("/create", authenticateUser, checkQuota, createPost);
+router.post("/manualPost", authenticateUser, checkQuota, manualPost);
+router.post("/schedule", authenticateUser, checkQuota, schedulePost);
 router.get("/scheduled", authenticateUser, getScheduledPosts);
 router.delete("/cancel/:postId/:platform", authenticateUser, cancelScheduledPost);
 router.post("/reschedule", authenticateUser, reschedulePost);

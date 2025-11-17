@@ -96,6 +96,105 @@ export const createPost = async (req, res) => {
 
 /* 🚀 Manual posting (multi-platform) */
 
+// export const manualPost = async (req, res) => {
+//   try {
+//     const { postId, platform } = req.body;
+//     if (!platform) return res.status(400).json({ error: "Platform is required" });
+
+//     const post = await Post.findOne({ _id: postId, user: req.user._id });
+//     if (!post) return res.status(404).json({ error: "Post not found" });
+
+//     const user = await User.findById(req.user._id);
+//     let result = {};
+
+//     // ---------- LinkedIn ----------
+//     if (platform === "linkedin") {
+//       if (!user.linkedinAccessToken || !user.linkedinPersonURN) {
+//         return res.status(400).json({ error: "LinkedIn not connected" });
+//       }
+
+//       result = await postToLinkedIn(user, {
+//         title: post.title,
+//         content: post.content,
+//         image: post.image,
+//       });
+//     }
+
+//     // ---------- Reddit ----------
+//     if (platform === "reddit") {
+//       if (!user.redditAccessToken) {
+//         return res.status(400).json({ error: "Reddit not connected" });
+//       }
+
+//       const accessToken = (await refreshRedditToken(user)) || user.redditAccessToken;
+//       const redditUsername = user.redditUsername || "UnknownUser";
+//       const redditData = post.platforms.reddit?.extra;
+
+//       if (!redditData?.subreddit) {
+//         return res.status(400).json({ error: "Missing subreddit info" });
+//       }
+
+//       result = await postToSubreddit(
+//         accessToken,
+//         redditUsername,
+//         redditData.subreddit,
+//         post.title,
+//         post.content,
+//         redditData.url,
+//         redditData.flairId
+//       );
+//     }
+
+//     // ---------- Facebook ----------
+//     if (platform === "facebook" || platform === "Facebook") {
+//       if (!user.facebookPages || user.facebookPages.length === 0) {
+//         return res.status(400).json({ error: "No Facebook Pages connected" });
+//       }
+
+//       // Pages selected from frontend
+//       const selectedPages = req.body.selectedPages; // array of pageIds
+//       const pagesToPost = user.facebookPages.filter((p) =>
+//         selectedPages.includes(p.pageId)
+//       );
+
+//       if (!pagesToPost.length)
+//         return res.status(400).json({ error: "No valid pages selected" });
+
+//       result = await postToFacebook(pagesToPost, {
+//         title: post.title,
+//         content: post.content,
+//         image: post.image,
+//       });
+//     }
+
+//     // ---------- Update Post ----------
+//     post.platforms[platform] = {
+//       ...post.platforms[platform],
+//       status: "posted",
+//       postedAt: new Date(),
+//       postId: result?.id || result?.postId || null,
+//       url: result?.url || null,
+//     };
+//     await post.save();
+
+//     user.usageCount += 1;
+//     await user.save();
+
+//     res.json({ success: true, platform, result });
+//   } catch (err) {
+//     console.error("❌ Manual post failed:", err.message);
+//     const { postId, platform } = req.body;
+//     const post = await Post.findById(postId);
+//     if (post && platform) {
+//       post.platforms[platform].status = "failed";
+//       await post.save();
+//     }
+//     res.status(500).json({ error: `Failed to post on ${platform}` });
+//   }
+// };
+
+/* 🚀 Manual posting (multi-platform) with QUOTA CHECK */
+
 export const manualPost = async (req, res) => {
   try {
     const { postId, platform } = req.body;
@@ -105,7 +204,42 @@ export const manualPost = async (req, res) => {
     if (!post) return res.status(404).json({ error: "Post not found" });
 
     const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    /* -----------------------------------------
+     🔹 A) RESET QUOTA automatically on new month 
+    ------------------------------------------ */
+    const now = new Date();
+    const lastReset = user.lastQuotaReset || new Date();
+
+    const isNewMonth =
+      now.getMonth() !== lastReset.getMonth() ||
+      now.getFullYear() !== lastReset.getFullYear();
+
+    if (isNewMonth) {
+      user.usageCount = 0;
+      user.lastQuotaReset = now;
+      await user.save();
+    }
+
+    /* -----------------------------------------
+     🔹 B) CHECK QUOTA before posting
+    ------------------------------------------ */
+    const quota = user.monthlyQuota || 0;
+    const used = user.usageCount || 0;
+
+    if (used >= quota) {
+      return res.status(403).json({
+        error: "Your monthly quota is exhausted. Upgrade your plan to continue posting.",
+        remaining: 0,
+      });
+    }
+
     let result = {};
+
+    /* -----------------------------------------
+     🔹 POST TO LINKED PLATFORM
+    ------------------------------------------ */
 
     // ---------- LinkedIn ----------
     if (platform === "linkedin") {
@@ -151,8 +285,7 @@ export const manualPost = async (req, res) => {
         return res.status(400).json({ error: "No Facebook Pages connected" });
       }
 
-      // Pages selected from frontend
-      const selectedPages = req.body.selectedPages; // array of pageIds
+      const selectedPages = req.body.selectedPages || [];
       const pagesToPost = user.facebookPages.filter((p) =>
         selectedPages.includes(p.pageId)
       );
@@ -167,7 +300,9 @@ export const manualPost = async (req, res) => {
       });
     }
 
-    // ---------- Update Post ----------
+    /* -----------------------------------------
+     🔹 UPDATE POST STATUS
+    ------------------------------------------ */
     post.platforms[platform] = {
       ...post.platforms[platform],
       status: "posted",
@@ -177,21 +312,29 @@ export const manualPost = async (req, res) => {
     };
     await post.save();
 
+    /* -----------------------------------------
+     🔹 C) INCREASE USAGE COUNT ONLY AFTER SUCCESS
+    ------------------------------------------ */
     user.usageCount += 1;
     await user.save();
 
     res.json({ success: true, platform, result });
+
   } catch (err) {
     console.error("❌ Manual post failed:", err.message);
+
+    // Set platform status = failed
     const { postId, platform } = req.body;
     const post = await Post.findById(postId);
     if (post && platform) {
       post.platforms[platform].status = "failed";
       await post.save();
     }
+
     res.status(500).json({ error: `Failed to post on ${platform}` });
   }
 };
+
 
 /* 🕒 Schedule a post (works for all platforms) */
 
@@ -464,8 +607,6 @@ export const reschedulePost = async (req, res) => {
     res.status(500).json({ error: "Failed to reschedule post" });
   }
 };
-
-
 
 
 /**

@@ -1,5 +1,4 @@
 // backend/middleware/quotaMiddleware.js
-
 import User from "../models/User.js";
 
 export const checkQuota = async (req, res, next) => {
@@ -8,34 +7,39 @@ export const checkQuota = async (req, res, next) => {
 
     if (!user) return res.status(404).json({ msg: "User not found" });
 
-    // Check subscription status
+    // Require active subscription
     if (user.subscriptionStatus !== "active") {
-      return res.status(403).json({ msg: "Subscription inactive. Upgrade to continue." });
+      return res.status(403).json({
+        msg: "Your subscription is inactive. Upgrade to continue posting."
+      });
     }
 
-    // Reset monthly quota if last reset was before current month
+    // Monthly reset
     const now = new Date();
-    if (
-      !user.lastQuotaReset ||
-      user.lastQuotaReset.getMonth() !== now.getMonth() ||
-      user.lastQuotaReset.getFullYear() !== now.getFullYear()
-    ) {
+    const last = user.lastQuotaReset || new Date(2000, 0, 1);
+
+    const resetNeeded =
+      last.getMonth() !== now.getMonth() ||
+      last.getFullYear() !== now.getFullYear();
+
+    if (resetNeeded) {
       user.usageCount = 0;
       user.lastQuotaReset = now;
       await user.save();
     }
 
-    const quota = user.monthlyQuota || 5; // default for free/trial users
+    const quota = user.monthlyQuota || 5; // fallback for safety
+
     if (user.usageCount >= quota) {
       return res.status(403).json({
-        msg: `Monthly quota reached (${quota} posts allowed for your plan)`
+        msg: `You reached your ${quota} monthly post limit.`
       });
     }
 
-    req.user = user; // attach populated user
+    req.user = user;
     next();
   } catch (err) {
-    console.error("Quota check error:", err);
-    res.status(500).json({ msg: "Server error in quota check" });
+    console.error("Quota error:", err);
+    res.status(500).json({ msg: "Quota check failed" });
   }
 };

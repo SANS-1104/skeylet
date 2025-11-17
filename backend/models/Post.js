@@ -10,10 +10,10 @@ const platformSchema = new mongoose.Schema(
     },
     scheduledTime: { type: Date, default: null },
     postedAt: { type: Date, default: null },
-    postId: { type: String, default: null }, // post URN or ID
-    url: { type: String, default: null }, // final platform URL if available
+    postId: { type: String, default: null }, 
+    url: { type: String, default: null }, 
     extra: {
-      type: mongoose.Schema.Types.Mixed, // store custom platform-specific data
+      type: mongoose.Schema.Types.Mixed, 
       default: {},
     },
   },
@@ -34,13 +34,6 @@ const postSchema = new mongoose.Schema(
     viralityScore: { type: Number, default: 0 },
     content: { type: String, required: true },
     image: String,
-
-    // 🔹 Platforms object for LinkedIn, Reddit, Facebook, etc.
-    // platforms: {
-    //   linkedin: { type: platformSchema, default: {} },
-    //   reddit: { type: platformSchema, default: {} },
-    //   facebook: { type: platformSchema, default: {} },
-    // },
 
     platforms: {
       linkedin: { type: platformSchema, default: () => ({}) },

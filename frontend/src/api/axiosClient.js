@@ -1,5 +1,6 @@
 // src/api/axiosClient.js
 import axios from "axios";
+import { toast } from 'react-toastify';
 
 const axiosClient = axios.create({
   baseURL: "http://localhost:5000/api",
@@ -64,6 +65,14 @@ axiosClient.interceptors.response.use(
         window.location.href = "/auth";
       }
     }
+    // 🚨 Check for quota or limit exceeded
+    const quotaMsg = err.response?.data?.error || err.response?.data?.msg;
+    if (quotaMsg?.toLowerCase().includes("limit") || quotaMsg?.toLowerCase().includes("quota")) {
+      import("react-toastify").then(({ toast }) => {
+        toast.error(quotaMsg, { autoClose: 2000 });
+      });
+    }
+
 
     return Promise.reject(err);
   }

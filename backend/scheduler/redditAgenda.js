@@ -46,6 +46,32 @@ export const defineRedditAgendaJobs = () => {
         flairId
       );
 
+      // ===== 📌 QUOTA CHECK: Reddit Scheduled Post =====
+      const now = new Date();
+      const last = user.lastQuotaReset || new Date(2000, 0, 1);
+
+      const resetNeeded =
+        last.getMonth() !== now.getMonth() ||
+        last.getFullYear() !== now.getFullYear();
+
+      if (resetNeeded) {
+        user.usageCount = 0;
+        user.lastQuotaReset = now;
+      }
+
+      if (user.usageCount >= user.monthlyQuota) {
+        console.log("❌ Quota exceeded. Marking Reddit post as failed.");
+        post.platforms.reddit.status = "failed_quota";
+        await post.save();
+        await user.save();
+        return;
+      }
+
+      user.usageCount += 1;
+      await user.save();
+      // ===== END QUOTA CHECK =====
+
+
       post.platforms.reddit.status = "posted";
       post.platforms.reddit.postedAt = new Date();
       post.platforms.reddit.postUrl = res?.url || null;

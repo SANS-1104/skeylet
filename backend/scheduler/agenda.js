@@ -37,6 +37,31 @@ const defineLinkedInJob = () => {
         image: post.image,
       });
 
+      // 🟦 Quota logic
+      const now = new Date();
+      const last = user.lastQuotaReset || new Date(2000, 0, 1);
+      const resetNeeded =
+        last.getMonth() !== now.getMonth() ||
+        last.getFullYear() !== now.getFullYear();
+
+      if (resetNeeded) {
+        user.usageCount = 0;
+        user.lastQuotaReset = now;
+      }
+
+      if (user.usageCount >= user.monthlyQuota) {
+        console.log("❌ Quota exceeded. Marking LinkedIn post as failed.");
+        post.platforms.linkedin.status = "failed_quota";
+        await post.save();
+        await user.save();
+        return;
+      }
+
+      // increment usage
+      user.usageCount += 1;
+      await user.save();
+      // ===== END QUOTA CHECK =====
+
       post.platforms.linkedin.status = "posted";
       post.platforms.linkedin.postedAt = new Date();
       post.platforms.linkedin.postId = result?.postId || null;

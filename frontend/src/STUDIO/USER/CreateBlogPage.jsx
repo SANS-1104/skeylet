@@ -169,49 +169,127 @@ export function CreateBlogPage() {
 
   const [generatedByAI, setGeneratedByAI] = useState(false);
 
+  // const handleGenerate = async () => {
+  //   if (!topic.trim() && postMode === "custom") {
+  //     toast.error("Please enter a topic");
+  //     return;
+  //   }
+  //   setLoading(true);
+
+  //   try {
+  //     const res = await axiosClient.post("/generate-blog", {
+  //       topic,
+  //       content,
+  //       language,
+  //       tone,
+  //       image,
+  //       wordCount,
+  //       viralityScore,
+  //       // Instead of 'status', let backend handle platforms.linkedin.status
+  //       linkedinAutoPost, // send this flag
+  //     });
+
+  //     const data = res.data;
+
+  //     // Update UI fields with returned content
+  //     if (data.title || data.video_title) setTopic(data.title || data.video_title);
+  //     if (data.script || data.generated_text) setContent(data.script || data.generated_text);
+  //     if (data.picture || data.image) setImage(data.picture || data.image);
+
+  //     setOutput(data);
+  //     setGeneratedByAI(true);
+
+  //     toast.success("Blog generated successfully");
+
+  //     // ✅ Notify if auto-post to LinkedIn happened
+  //     if (data.platforms?.linkedin?.status === "posted") {
+  //       toast.success("Successfully posted to LinkedIn");
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to generate blog");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+
   const handleGenerate = async () => {
-    if (!topic.trim() && postMode === "custom") {
-      toast.error("Please enter a topic");
-      return;
+  if (!topic.trim() && postMode === "custom") {
+    toast.error("Please enter a topic");
+    return;
+  }
+  setLoading(true);
+
+  try {
+    const res = await axiosClient.post("/generate-blog", {
+      topic,
+      content,
+      language,
+      tone,
+      image,
+      wordCount,
+      viralityScore,
+      linkedinAutoPost,
+      redditAutoPost,
+      facebookAutoPost,
+      selectedSubreddit,
+      selectedFlair,
+      selectedFacebookPages,
+    });
+
+    const data = res.data;
+
+    // Update frontend fields with returned content
+    if (data.title || data.video_title) setTopic(data.title || data.video_title);
+    if (data.script || data.generated_text) setContent(data.script || data.generated_text);
+    if (data.picture || data.image) setImage(data.picture || data.image);
+
+    setOutput(data);
+    setGeneratedByAI(true);
+
+    toast.success("Blog generated successfully");
+
+    // ------------------ Handle Multi-Platform Auto-Post ------------------
+    const postedPlatforms = [];
+
+    // LinkedIn
+    if (data.linkedInPosted || data.platforms?.linkedin?.status === "posted") {
+      postedPlatforms.push("LinkedIn");
     }
-    setLoading(true);
 
-    try {
-      const res = await axiosClient.post("/generate-blog", {
-        topic,
-        content,
-        language,
-        tone,
-        image,
-        wordCount,
-        viralityScore,
-        // Instead of 'status', let backend handle platforms.linkedin.status
-        linkedinAutoPost, // send this flag
-      });
+    // Reddit
+    if (data.platforms?.reddit?.status === "posted") {
+      postedPlatforms.push(`Reddit (r/${selectedSubreddit})`);
+    }
 
-      const data = res.data;
+    // Facebook
+    if (data.platforms?.facebook?.status === "posted") {
+      postedPlatforms.push(
+        `Facebook (${selectedFacebookPages.length} page${selectedFacebookPages.length > 1 ? "s" : ""})`
+      );
+    }
 
-      // Update UI fields with returned content
-      if (data.title || data.video_title) setTopic(data.title || data.video_title);
-      if (data.script || data.generated_text) setContent(data.script || data.generated_text);
-      if (data.picture || data.image) setImage(data.picture || data.image);
+    if (postedPlatforms.length > 0) {
+      toast.success(`Successfully auto-posted to: ${postedPlatforms.join(", ")}`, { autoClose: 3000 });
+    }
 
-      setOutput(data);
-      setGeneratedByAI(true);
+  } catch (err) {
+    console.error("Blog generation failed:", err.response?.data || err.message);
 
-      toast.success("Blog generated successfully");
-
-      // ✅ Notify if auto-post to LinkedIn happened
-      if (data.platforms?.linkedin?.status === "posted") {
-        toast.success("Successfully posted to LinkedIn");
-      }
-    } catch (err) {
-      console.error(err);
+    // Handle quota exceeded
+    const quotaMsg = err.response?.data?.error || err.response?.data?.msg;
+    if (quotaMsg?.toLowerCase().includes("limit") || quotaMsg?.toLowerCase().includes("quota")) {
+      toast.error(quotaMsg, { autoClose: 2000 });
+    } else {
       toast.error("Failed to generate blog");
-    } finally {
-      setLoading(false);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const [currentDraftId, setCurrentDraftId] = useState(null);
   // ------------------ LinkedIn Manual Post ------------------

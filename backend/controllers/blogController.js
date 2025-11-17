@@ -25,74 +25,216 @@ export async function getTopicSuggestions(req, res) {
   }
 }
 
-// ------------------ Generate Blog ------------------
+// // ------------------ Generate Blog ------------------
+// export async function generateBlog(req, res) {
+//   try {
+//     const { topic, wordCount, language = "english", tone = "professional", viralityScore = 50, status: payloadStatus } = req.body;
+//     const user = await User.findById(req.user.id);
+
+//     // ---- SaaS subscription check ----
+//     // if (user.subscriptionStatus !== "active") {
+//     //   return res.status(403).json({ error: "Subscription inactive. Please renew your plan." });
+//     // }
+//     // if (user.usageCount >= user.monthlyQuota) {
+//     //   return res.status(403).json({ error: "Monthly quota exceeded. Upgrade your plan to continue posting." });
+//     // }
+
+//     // ---- Generate content ----
+//     const payload = topic ? { topic, wordCount, language, tone, viralityScore } : { language, tone, viralityScore };
+//     const response = await axios.post("https://lavi0105.app.n8n.cloud/webhook/generatePost", payload);
+//     const blogData = response.data;
+
+//     const title = blogData.video_title || blogData.title || topic || "Generated Blog";
+//     const content = blogData.script || blogData.generated_text || "";
+//     let imageUrl = blogData.image || blogData.picture || req.body.image || null;
+
+//     // ---- Auto-post if enabled ----
+//     let linkedInPosted = false;
+//     let linkedinPostId = null;
+//     let linkedInUrl = null;
+
+//     if (user.autoPostToLinkedIn && user.linkedinAccessToken && user.linkedinPersonURN && content.trim()) {
+//       try {
+//         const result = await postToLinkedIn(user, { title, content, image: imageUrl });
+//         linkedinPostId = result.postId;
+//         linkedInUrl = result.url || null;
+//         linkedInPosted = true;
+//       } catch (err) {
+//         console.error("LinkedIn auto-post failed:", err.message);
+//       }
+//     }
+
+//     // ---- Save post ----
+//     const post = await Post.create({
+//       user: user._id,
+//       title,
+//       content,
+//       image: imageUrl,
+//       viralityScore: Number(viralityScore),
+//       platforms: {
+//         linkedin: {
+//           status: linkedInPosted ? "posted" : payloadStatus || "draft",
+//           scheduledTime: null,
+//           postedAt: linkedInPosted ? new Date() : null,
+//           postId: linkedinPostId,
+//           url: linkedInUrl,
+//           extra: {},
+//         }
+//       }
+//     });
+
+//     // ---- Increment usage count ----
+//     user.usageCount += 1;
+//     await user.save();
+
+//     res.json({ ...blogData, image: imageUrl, linkedInPosted });
+//   } catch (err) {
+//     console.error("Blog generation error:", err.response?.data || err.message);
+//     res.status(500).json({ error: "Blog generation failed" });
+//   }
+// }
+
 export async function generateBlog(req, res) {
   try {
-    const { topic, wordCount, language = "english", tone = "professional", viralityScore = 50, status: payloadStatus } = req.body;
+    const {
+      topic,
+      wordCount,
+      language = "english",
+      tone = "professional",
+      viralityScore = 50,
+      linkedinAutoPost,
+      redditAutoPost,
+      facebookAutoPost,
+      selectedSubreddit,
+      selectedFlair,
+      selectedFacebookPages,
+    } = req.body;
+
     const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-    // ---- SaaS subscription check ----
-    // if (user.subscriptionStatus !== "active") {
-    //   return res.status(403).json({ error: "Subscription inactive. Please renew your plan." });
-    // }
-    // if (user.usageCount >= user.monthlyQuota) {
-    //   return res.status(403).json({ error: "Monthly quota exceeded. Upgrade your plan to continue posting." });
-    // }
+    // ---------- Quota check ----------
+    const now = new Date();
+    const lastReset = user.lastQuotaReset || new Date();
+    const isNewMonth = now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear();
+    if (isNewMonth) {
+      user.usageCount = 0;
+      user.lastQuotaReset = now;
+      await user.save();
+    }
+    if (user.usageCount >= user.monthlyQuota) {
+      return res.status(403).json({ error: "You reached your monthly post limit." });
+    }
 
-    // ---- Generate content ----
+    // ---------- Generate content ----------
     const payload = topic ? { topic, wordCount, language, tone, viralityScore } : { language, tone, viralityScore };
     const response = await axios.post("https://lavi0105.app.n8n.cloud/webhook/generatePost", payload);
-    const blogData = response.data;
+    const blogData = response.data || {};
 
     const title = blogData.video_title || blogData.title || topic || "Generated Blog";
-    const content = blogData.script || blogData.generated_text || "";
-    let imageUrl = blogData.image || blogData.picture || req.body.image || null;
+    const content = (blogData.script || blogData.generated_text || "").trim();
+    const imageUrl = blogData.image || blogData.picture || req.body.image || null;
 
-    // ---- Auto-post if enabled ----
-    let linkedInPosted = false;
-    let linkedinPostId = null;
-    let linkedInUrl = null;
+    // ---------- Prepare platforms object ----------
+    const platforms = {
+      linkedin: { status: "draft", postedAt: null, extra: {} },
+      reddit: { status: "draft", postedAt: null, extra: { subreddit: selectedSubreddit, flairId: selectedFlair } },
+      facebook: { status: "draft", postedAt: null, extra: { pages: selectedFacebookPages } },
+    };
 
-    if (user.autoPostToLinkedIn && user.linkedinAccessToken && user.linkedinPersonURN && content.trim()) {
-      try {
-        const result = await postToLinkedIn(user, { title, content, image: imageUrl });
-        linkedinPostId = result.postId;
-        linkedInUrl = result.url || null;
-        linkedInPosted = true;
-      } catch (err) {
-        console.error("LinkedIn auto-post failed:", err.message);
+    // ---------- Auto-post logic ----------
+    if (content) {
+      // LinkedIn
+      if (linkedinAutoPost) {
+        if (user.linkedinAccessToken && user.linkedinPersonURN) {
+          try {
+            const result = await postToLinkedIn(user, { title, content, image: imageUrl });
+            platforms.linkedin = {
+              status: "posted",
+              postedAt: new Date(),
+              postId: result.postId,
+              url: result.url,
+              extra: {},
+            };
+          } catch (err) {
+            console.error("LinkedIn auto-post failed:", err.message);
+            platforms.linkedin.status = "failed";
+          }
+        } else {
+          platforms.linkedin.status = "failed";
+        }
+      }
+
+      // Reddit
+      if (redditAutoPost) {
+        if (user.redditAccessToken && selectedSubreddit) {
+          try {
+            const accessToken = (await refreshRedditToken(user)) || user.redditAccessToken;
+            const result = await postToSubreddit(accessToken, user.redditUsername, selectedSubreddit, title, content, "", selectedFlair);
+            platforms.reddit = {
+              status: "posted",
+              postedAt: new Date(),
+              postId: result.id,
+              url: result.url,
+              extra: { subreddit: selectedSubreddit, flairId: selectedFlair },
+            };
+          } catch (err) {
+            console.error("Reddit auto-post failed:", err.message);
+            platforms.reddit.status = "failed";
+          }
+        } else {
+          platforms.reddit.status = "failed"; // auto-post enabled but missing subreddit or token
+        }
+      }
+
+      // Facebook
+      if (facebookAutoPost) {
+        if (user.facebookPages?.length && selectedFacebookPages?.length) {
+          try {
+            const pagesToPost = user.facebookPages.filter(p => selectedFacebookPages.includes(p.pageId));
+            if (pagesToPost.length) {
+              const result = await postToFacebook(pagesToPost, { title, content, image: imageUrl });
+              platforms.facebook = {
+                status: "posted",
+                postedAt: new Date(),
+                postId: result.id,
+                url: result.url,
+                extra: { pages: selectedFacebookPages },
+              };
+            } else {
+              platforms.facebook.status = "failed"; // auto-post enabled but no valid pages
+            }
+          } catch (err) {
+            console.error("Facebook auto-post failed:", err.message);
+            platforms.facebook.status = "failed";
+          }
+        } else {
+          platforms.facebook.status = "failed"; // auto-post enabled but no pages selected
+        }
       }
     }
 
-    // ---- Save post ----
-    const post = await Post.create({
+    // ---------- Save post ----------
+    await Post.create({
       user: user._id,
       title,
       content,
       image: imageUrl,
       viralityScore: Number(viralityScore),
-      platforms: {
-        linkedin: {
-          status: linkedInPosted ? "posted" : payloadStatus || "draft",
-          scheduledTime: null,
-          postedAt: linkedInPosted ? new Date() : null,
-          postId: linkedinPostId,
-          url: linkedInUrl,
-          extra: {},
-        }
-      }
+      platforms,
     });
 
-    // ---- Increment usage count ----
+    // ---------- Increment usage count ----------
     user.usageCount += 1;
     await user.save();
 
-    res.json({ ...blogData, image: imageUrl, linkedInPosted });
+    res.json({ ...blogData, title, content, image: imageUrl, platforms });
   } catch (err) {
     console.error("Blog generation error:", err.response?.data || err.message);
     res.status(500).json({ error: "Blog generation failed" });
   }
 }
+
 
 // ------------------ Generate Blog (No Auto-Post) ------------------
 export async function generateBlogOnly(req, res) {
