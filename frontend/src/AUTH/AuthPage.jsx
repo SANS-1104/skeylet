@@ -282,18 +282,18 @@ export function AuthPage({ onLogin }) {
                         <CardContent className="space-y-6">
                             {/* Social Login */}
                             <div className="space-y-3">
-                                <Button
+                                {/* <Button
                                     variant="outline"
                                     className="w-full gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all duration-300"
                                     onClick={() => onLogin("demo@example.com", "demo")}
                                 >
                                     <Linkedin className="h-4 w-4 text-blue-600" />
                                     Continue with LinkedIn
-                                </Button>
+                                </Button> */}
                                 <Button
                                     variant="outline"
                                     className="w-full gap-2 hover:bg-gray-50 transition-all duration-300"
-                                    onClick={() => window.location.href = "http://localhost:5001/auth/google"}
+                                    onClick={() => window.location.href = "https://api.skeylet.com/auth/google"}
                                 >
                                     <Mail className="h-4 w-4" />
                                     Continue with Google

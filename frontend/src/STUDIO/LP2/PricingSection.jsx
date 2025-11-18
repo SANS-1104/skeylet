@@ -195,7 +195,7 @@ export function PricingSection() {
                     onClick={() => handleChoosePlan(plan)}
                     disabled={activePlan === "active"} // disable if already purchased
                   >
-                    {activePlan === "active"
+                    {isLoggedIn && activePlan === "active"
                       ? "Plan Purchased!"
                       : `Claim Your ${discount}% Discount Now`}
                   </Button>
