@@ -319,7 +319,7 @@ export function HeroSection({ onScrollToPricing }) {
                     }}
                     className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
                   />
-                  <span className="relative">Start Free Trial</span>
+                  <span className="relative">Start Trial</span>
                   <motion.div
                     animate={{ x: [0, 5, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}

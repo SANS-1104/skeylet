@@ -46,8 +46,16 @@ export function CheckoutPage() {
         amount: plan.selectedPrice,
       });
       // 2️⃣ Razorpay options
+
+
+      
+      const keyRes = await axiosClient.get("/payments/key");
+      const razorpayKey = keyRes.data.key;
+
+
       const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        // key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        key: razorpayKey,
         amount: order.amount,
         currency: order.currency,
         name: "LinkedIn Post Scheduler",

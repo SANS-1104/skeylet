@@ -179,7 +179,7 @@ export function FinalCTASection({ onScrollToPricing }) {
                 }}
                 className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-purple-200/30 to-transparent skew-x-12"
               />
-              <span className="relative">Start Free Trial</span>
+              <span className="relative">Start Trial</span>
               <ArrowRight className="ml-2 h-5 w-5 relative group-hover:translate-x-1 transition-transform" />
             </Button>
           </motion.div>

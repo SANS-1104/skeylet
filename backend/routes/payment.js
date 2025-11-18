@@ -7,5 +7,8 @@ const router = express.Router();
 
 // GET /api/paymentStatus
 router.get("/", authMiddleware, getPaymentStatus);
+router.get("/key", (req, res) => {
+  res.json({ key: process.env.RAZORPAY_KEY_ID });
+});
 
 export default router;
