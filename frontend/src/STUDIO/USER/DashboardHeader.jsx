@@ -49,7 +49,7 @@ export function DashboardHeader({ currentPage, onPageChange }) {
             </div>
             <div>
               <span className="font-bold text-lg bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-                LinkedIn Scheduler
+                Skeylet
               </span>
               <div className="text-xs text-gray-500">Professional Edition</div>
             </div>

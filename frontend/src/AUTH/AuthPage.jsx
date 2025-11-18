@@ -175,7 +175,7 @@ export function AuthPage({ onLogin }) {
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-                                    LinkedIn Scheduler
+                                    Skeylet
                                 </h1>
                                 <p className="text-sm text-gray-500">Professional Edition</p>
                             </div>
