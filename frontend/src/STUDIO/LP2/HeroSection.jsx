@@ -207,7 +207,7 @@ export function HeroSection({ onScrollToPricing }) {
                     className="bg-gradient-to-r from-indigo-400 via-purple-400 via-pink-400 to-indigo-400 bg-[length:200%_auto] bg-clip-text text-transparent"
                     style={{ backgroundSize: "200% auto" }}
                   >
-                    Social Platform
+                    Social Platform by sanskriti
                   </motion.span>
                   <motion.div
                     initial={{ scaleX: 0 }}
