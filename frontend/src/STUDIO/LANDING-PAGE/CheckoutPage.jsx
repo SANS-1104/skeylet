@@ -58,7 +58,7 @@ export function CheckoutPage() {
         key: razorpayKey,
         amount: order.amount,
         currency: order.currency,
-        name: "LinkedIn Post Scheduler",
+        name: "Skeylet",
         description: `Subscription: ${currentPlan.name}`,
         order_id: order.id,
         handler: async function (response) {
