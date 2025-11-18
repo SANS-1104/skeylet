@@ -89,6 +89,13 @@ app.use(cors({
 
 
 // -------------------- ROUTES --------------------
+
+// -------------------- ROOT ROUTE --------------------
+app.get("/", (req, res) => {
+  res.send("✅ Skeylet backend API running");
+});
+// ----------------------------------------------------
+
 app.use("/auth/google", googleAuthRoutes);
 app.use("/api", authRoutes);
 app.use("/api", postRoutes);
