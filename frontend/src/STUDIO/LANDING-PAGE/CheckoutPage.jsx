@@ -48,8 +48,8 @@ export function CheckoutPage() {
       // 2️⃣ Razorpay options
 
 
-      
-      const keyRes = await axiosClient.get("/payments/key");
+
+      const keyRes = await axiosClient.get("/paymentStatus/key");
       const razorpayKey = keyRes.data.key;
 
 
