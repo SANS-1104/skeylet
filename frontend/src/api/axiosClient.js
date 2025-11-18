@@ -3,7 +3,8 @@ import axios from "axios";
 import { toast } from 'react-toastify';
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:5000/api",
+  // baseURL: "http://localhost:5001/api",
+  baseURL: "https://api.skeylet.com/api", // 🔹 live backend
   headers: {
     "Content-Type": "application/json",
   },
@@ -47,7 +48,7 @@ axiosClient.interceptors.response.use(
       const refreshToken = localStorage.getItem("refreshToken");
       if (refreshToken) {
         try {
-          const res = await axios.post("http://localhost:5000/api/auth/refresh-token", {
+          const res = await axios.post("https://api.skeylet.com/api/auth/refresh-token", {
             token: refreshToken,
           });
 

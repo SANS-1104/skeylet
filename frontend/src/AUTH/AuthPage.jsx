@@ -293,7 +293,7 @@ export function AuthPage({ onLogin }) {
                                 <Button
                                     variant="outline"
                                     className="w-full gap-2 hover:bg-gray-50 transition-all duration-300"
-                                    onClick={() => window.location.href = "http://localhost:5000/auth/google"}
+                                    onClick={() => window.location.href = "http://localhost:5001/auth/google"}
                                 >
                                     <Mail className="h-4 w-4" />
                                     Continue with Google
