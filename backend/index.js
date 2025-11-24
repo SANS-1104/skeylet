@@ -32,6 +32,8 @@ import unifiedRoutes from "./routes/unifiedPost.js";
 import googleAuthRoutes from "./routes/googleAuth.js";
 import facebookRoutes from "./routes/facebookRoutes.js";
 
+import variantPayRoutes from "./routes/variantPay.js";
+
 const app = express();
 
 
@@ -108,7 +110,8 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/plans", planRoutes);
 app.use("/api/paymentStatus", paymentRoutes);
 app.use("/api/studioAdmin", adminRoutes);
-app.use("/api/payments", razorpayRoutes);
+// app.use("/api/payments", razorpayRoutes);
+app.use("/api/payments", variantPayRoutes);
 app.use("/api/unifiedPost", unifiedRoutes);
 // ----------------------------------------------------------
 

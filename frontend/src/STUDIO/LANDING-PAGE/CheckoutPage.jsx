@@ -28,6 +28,87 @@ export function CheckoutPage() {
     setPlan(selectedPlan);
   }, [isLoggedIn, navigate]);
 
+  // razorpay logic
+  // const handlePayment = async () => {
+  //   if (!plan) {
+  //     toast.error("Plan is missing");
+  //   };
+
+  //   const currentPlan = plan;
+  //   const currentUser = profile;
+  //   if (!currentUser?._id) {
+  //     toast.error("User profile not loaded yet", { autoClose: 2000 });
+  //     return;
+  //   }
+
+  //   try {
+  //     // 1️⃣ Create order from backend
+  //     const { data: order } = await axiosClient.post("/payments/create-order", {
+  //       amount: plan.selectedPrice,
+  //     });
+  //     // 2️⃣ Razorpay options
+
+
+
+  //     const keyRes = await axiosClient.get("/paymentStatus/key");
+  //     const razorpayKey = keyRes.data.key;
+
+
+  //     const options = {
+  //       // key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+  //       key: razorpayKey,
+  //       amount: order.amount,
+  //       currency: order.currency,
+  //       name: "Skeylet",
+  //       description: `Subscription: ${currentPlan.name}`,
+  //       order_id: order.id,
+  //       handler: async function (response) {
+  //         try {
+  //           // Use captured user
+  //           // Correct: send only required fields
+  //           const verifyRes = await axiosClient.post("/payments/verify-payment", {
+  //             razorpay_order_id: response.razorpay_order_id,
+  //             razorpay_payment_id: response.razorpay_payment_id,
+  //             razorpay_signature: response.razorpay_signature,
+  //           });
+
+
+  //           if (verifyRes.data.success) {
+  //             await axiosClient.post("/plans/subscribe", {
+  //               userId: currentUser._id,
+  //               planId: currentPlan._id,
+  //               billingType: currentPlan.billingType,
+  //               price: currentPlan.selectedPrice,
+  //               paymentStatus: "success",
+  //             });
+
+  //             localStorage.removeItem("selectedPlan");
+  //             toast.success("Payment successful! Redirecting to dashboard...", { autoClose: 1500 });
+  //             navigate(`/dashboard/${currentUser.name}`);
+  //           } else {
+  //             toast.error("Payment verification failed", { autoClose: 2000 });
+  //           }
+  //         } catch (err) {
+  //           console.error(err);
+  //           toast.error("Payment verification failed", { autoClose: 2000 });
+  //         }
+  //       },
+  //       prefill: {
+  //         name: currentUser.name,
+  //         email: currentUser.email,
+  //       },
+  //       theme: { color: "#528FF0" },
+  //     };
+  //     // 5️⃣ Open Razorpay popup
+  //     const razor = new window.Razorpay(options);
+  //     razor.open();
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to initiate payment", { autoClose: 1500 });
+  //   }
+  // };
+
+  // variantpay logic
   const handlePayment = async () => {
     if (!plan) {
       toast.error("Plan is missing");
@@ -41,66 +122,32 @@ export function CheckoutPage() {
     }
 
     try {
-      // 1️⃣ Create order from backend
-      const { data: order } = await axiosClient.post("/payments/create-order", {
-        amount: plan.selectedPrice,
+      // 1️⃣ VariantPay: Initiate Transaction (HPP Flow)
+      // clientReferenceId: A unique ID for your order, required by VariantPay [cite: 540]
+      const clientReferenceId = `SKEYLET_${currentUser._id}_${Date.now()}`; 
+
+      const { data: initRes } = await axiosClient.post("/payments/initiate-transaction", {
+        amount: plan.selectedPrice, // Your price
+        clientReferenceId: clientReferenceId,
       });
-      // 2️⃣ Razorpay options
 
+      if (initRes.success) {
+        // 2️⃣ VariantPay: Redirect the user to the Hosted Payment Page (HPP)
+        // Store transaction details (sanTxnId, cTxnId, planId, billingType, etc.) in your database 
+        // *before* redirecting, to verify them later in the callback.
+        
+        // **NOTE:** For a complete implementation, you'd store the initial transaction 
+        // with status 'pending' here. For this example, we proceed with redirection.
 
+        // We'll simulate the successful subscription update after the payment is verified 
+        // in a subsequent step on the callback.
+        
+        window.location.href = initRes.redirectUrl; // Redirect to VariantPay HPP
 
-      const keyRes = await axiosClient.get("/paymentStatus/key");
-      const razorpayKey = keyRes.data.key;
+      } else {
+        toast.error(initRes.message || "Failed to initiate VariantPay payment", { autoClose: 2000 });
+      }
 
-
-      const options = {
-        // key: process.env.REACT_APP_RAZORPAY_KEY_ID,
-        key: razorpayKey,
-        amount: order.amount,
-        currency: order.currency,
-        name: "Skeylet",
-        description: `Subscription: ${currentPlan.name}`,
-        order_id: order.id,
-        handler: async function (response) {
-          try {
-            // Use captured user
-            // Correct: send only required fields
-            const verifyRes = await axiosClient.post("/payments/verify-payment", {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            });
-
-
-            if (verifyRes.data.success) {
-              await axiosClient.post("/plans/subscribe", {
-                userId: currentUser._id,
-                planId: currentPlan._id,
-                billingType: currentPlan.billingType,
-                price: currentPlan.selectedPrice,
-                paymentStatus: "success",
-              });
-
-              localStorage.removeItem("selectedPlan");
-              toast.success("Payment successful! Redirecting to dashboard...", { autoClose: 1500 });
-              navigate(`/dashboard/${currentUser.name}`);
-            } else {
-              toast.error("Payment verification failed", { autoClose: 2000 });
-            }
-          } catch (err) {
-            console.error(err);
-            toast.error("Payment verification failed", { autoClose: 2000 });
-          }
-        },
-        prefill: {
-          name: currentUser.name,
-          email: currentUser.email,
-        },
-        theme: { color: "#528FF0" },
-      };
-      // 5️⃣ Open Razorpay popup
-      const razor = new window.Razorpay(options);
-      razor.open();
     } catch (err) {
       console.error(err);
       toast.error("Failed to initiate payment", { autoClose: 1500 });
@@ -117,7 +164,7 @@ export function CheckoutPage() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Checkout</h1>
           <p className="text-gray-600 text-lg">
-            You're one step away from automating your LinkedIn posts!
+            You're one step away from automating your posts!
           </p>
         </div>
 
