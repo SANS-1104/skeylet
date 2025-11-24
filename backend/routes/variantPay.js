@@ -75,8 +75,15 @@ router.post("/initiate-transaction", async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Initiate transaction error:", error);
-    res.status(500).json({ message: "Error initiating VariantPay transaction" });
+    // ❗ CRITICAL FIX: Log the actual error details from Axios response
+    if (axios.isAxiosError(error) && error.response) {
+      console.error("VariantPay API Error Response Status:", error.response.status);
+      // This line will print the error message and code from the VariantPay API (e.g., E005)
+      console.error("VariantPay API Error Response Data:", error.response.data); 
+    } else {
+      console.error("Initiate transaction non-Axios error:", error.message);
+    }
+    res.status(500).json({ message: "Error initiating VariantPay transaction. Check backend logs for E-Code." });
   }
 });
 

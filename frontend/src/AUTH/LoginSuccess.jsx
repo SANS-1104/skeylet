@@ -12,7 +12,7 @@ export default function LoginSuccess() {
     if (hasHandledLogin.current) return; // ✅ skip if already processed
     hasHandledLogin.current = true;
 
-    console.log("🔍 Full URL:", window.location.href);
+    // console.log("🔍 Full URL:", window.location.href);
 
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get("accessToken");
