@@ -225,9 +225,15 @@ function decryptPayload(payloadBase64, ivBase64) {
 //  -> called from your CheckoutPage on "Proceed to Pay"
 //  -> returns { success, redirectUrl, sanTxnId, cTxnId }
 // ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
+//  POST /payments/initiate-transaction
+//  -> called from CheckoutPage on "Proceed to Pay"
+// ---------------------------------------------------------------------
 router.post("/initiate-transaction", async (req, res) => {
   try {
     const { amount, clientReferenceId, userDetails } = req.body;
+
+    console.log("[VariantPay] Incoming initiate-transaction body:", req.body);
 
     const numericAmount = Number(amount);
 
@@ -252,53 +258,90 @@ router.post("/initiate-transaction", async (req, res) => {
       });
     }
 
+    if (!KEY_BUFFER || KEY_BUFFER.length !== 32) {
+      console.error(
+        "[VariantPay] Secret key invalid or missing. Length:",
+        KEY_BUFFER?.length
+      );
+      return res.status(500).json({
+        success: false,
+        message: "VariantPay secret key misconfigured on server",
+      });
+    }
+
     // 1) Build payload according to Payment Gateway doc
     const payloadData = {
       reference_id: clientReferenceId,
       from_account: VARIANTPAY_CONFIG.FROM_ACCOUNT,
       currency_code: VARIANTPAY_CONFIG.CURRENCY_CODE,
       transfer_amount: numericAmount.toFixed(2), // "100.00"
-      transfer_type: VARIANTPAY_CONFIG.TRANSFER_TYPE, // "1" (fixed)
+      transfer_type: VARIANTPAY_CONFIG.TRANSFER_TYPE, // "1" fixed
 
-      // Required by doc in direct API – we'll use user's name
+      // required in direct API; for HPP this will be used as card holder name
       card_holder_name: userDetails.name || clientReferenceId,
 
       purpose_message: `Skeylet subscription for ${clientReferenceId}`,
 
-      // Not in doc but often accepted as extra info:
+      // extra meta (not in doc but harmless)
       customer_mobile: userDetails.mobile,
     };
 
     const jsonPayload = JSON.stringify(payloadData);
+    console.log("[VariantPay] Plain payload:", jsonPayload);
 
     // 2) Encrypt payload using AES-256-CBC
     const { payload: encryptedPayload, iv } = encryptPayload(jsonPayload);
 
-    // 3) Prepare form body as per doc (payload + iv)
-    const formBody = new URLSearchParams();
-    formBody.append("payload", encryptedPayload);
-    formBody.append("iv", iv);
+    console.log("[VariantPay] Encrypted payload + IV prepared");
 
-    // 4) Call VariantPay Payment Gateway
-    const { data: vpResponse } = await axios.post(
-      VARIANTPAY_CONFIG.INITIATE_URL,
-      formBody.toString(),
-      {
-        headers: {
-          "client-id": VARIANTPAY_CONFIG.CLIENT_ID,
-          "fps3-api-key": VARIANTPAY_CONFIG.API_KEY,
-          "client-secret": VARIANTPAY_CONFIG.CLIENT_SECRET,
-          "service-secret": VARIANTPAY_CONFIG.SERVICE_SECRET,
-          "Content-Type": "application/x-www-form-urlencoded",
-          accept: "application/json",
-        },
-        timeout: 60_000,
-      }
+    // 3) Build multipart/form-data body
+    // Using URLSearchParams WAS okay for some APIs, but the doc explicitly shows --form (multipart)
+    const formData = new URLSearchParams();
+    formData.append("payload", encryptedPayload);
+    formData.append("iv", iv);
+
+    console.log(
+      "[VariantPay] Hitting VariantPay at:",
+      VARIANTPAY_CONFIG.INITIATE_URL
     );
+
+    let vpResponse;
+    try {
+      const axiosResponse = await axios.post(
+        VARIANTPAY_CONFIG.INITIATE_URL,
+        formData.toString(),
+        {
+          headers: {
+            "client-id": VARIANTPAY_CONFIG.CLIENT_ID,
+            "fps3-api-key": VARIANTPAY_CONFIG.API_KEY,
+            "client-secret": VARIANTPAY_CONFIG.CLIENT_SECRET,
+            "service-secret": VARIANTPAY_CONFIG.SERVICE_SECRET,
+            "Content-Type": "application/x-www-form-urlencoded",
+            accept: "application/json",
+          },
+          timeout: 60_000,
+        }
+      );
+      vpResponse = axiosResponse.data;
+    } catch (axiosErr) {
+      console.error(
+        "[VariantPay] Axios error calling gateway:",
+        axiosErr.response?.status,
+        axiosErr.response?.data || axiosErr.message
+      );
+      return res.status(502).json({
+        success: false,
+        message:
+          axiosErr.response?.data?.message ||
+          "Could not reach VariantPay gateway. Check headers / endpoint / IP whitelisting.",
+      });
+    }
+
+    console.log("[VariantPay] Raw gateway response:", vpResponse);
 
     // 5) Validate & decrypt VariantPay response
     if (!vpResponse.payload || !vpResponse.iv) {
-      console.error("[VariantPay] Unexpected response:", vpResponse);
+      console.error("[VariantPay] Unexpected response (no payload/iv):", vpResponse);
       return res.status(502).json({
         success: false,
         message:
@@ -307,10 +350,33 @@ router.post("/initiate-transaction", async (req, res) => {
       });
     }
 
-    const decryptedText = decryptPayload(vpResponse.payload, vpResponse.iv);
-    const decrypted = JSON.parse(decryptedText);
+    let decryptedText;
+    try {
+      decryptedText = decryptPayload(vpResponse.payload, vpResponse.iv);
+    } catch (decErr) {
+      console.error("[VariantPay] Decryption failed:", decErr.message);
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to decrypt VariantPay response. Check VARIANTPAY_SECRET_KEY matches their portal.",
+      });
+    }
 
-    console.log("[VariantPay] Decrypted response:", decrypted);
+    console.log("[VariantPay] Decrypted raw response:", decryptedText);
+
+    let decrypted;
+    try {
+      decrypted = JSON.parse(decryptedText);
+    } catch (parseErr) {
+      console.error("[VariantPay] JSON parse failed on decrypted text:", parseErr.message);
+      return res.status(500).json({
+        success: false,
+        message:
+          "VariantPay response not valid JSON after decryption. Verify encryption key and integration mode.",
+      });
+    }
+
+    console.log("[VariantPay] Decrypted response object:", decrypted);
 
     // 6) Success -> return payment link to frontend
     if (
@@ -326,8 +392,8 @@ router.post("/initiate-transaction", async (req, res) => {
       });
     }
 
-    // 7) Failure from gateway
-    console.error("[VariantPay] Initiation FAILED:", decrypted);
+    // 7) Failure from gateway (but decrypted correctly)
+    console.error("[VariantPay] Initiation FAILED at gateway:", decrypted);
     return res.status(400).json({
       success: false,
       message: decrypted.message || "VariantPay initiation failed",
@@ -335,13 +401,14 @@ router.post("/initiate-transaction", async (req, res) => {
       status: decrypted.status,
     });
   } catch (err) {
-    console.error("[VariantPay] initiate-transaction error:", err);
+    console.error("[VariantPay] initiate-transaction UNEXPECTED error:", err);
     return res.status(500).json({
       success: false,
       message: "Internal server error during VariantPay payment initiation",
     });
   }
 });
+
 
 // ---------------------------------------------------------------------
 //  POST /variantpay/callback
