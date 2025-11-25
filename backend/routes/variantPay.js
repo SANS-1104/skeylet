@@ -9,7 +9,7 @@ import Plan from "../models/Plan.js";
 
 const router = express.Router();
 
-[cite_start]// Production API endpoint from documentation [cite: 4]
+
 const VARIANTPAY_API_ENDPOINT = process.env.VARIANTPAY_API_ENDPOINT || "https://payments.variantpay.com/cbs/uni/initiate";
 const VARIANTPAY_HEADERS = {
   'client-id': process.env.VARIANTPAY_CLIENT_ID,
