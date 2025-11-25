@@ -1,6 +1,8 @@
-// backend/routes/variantPay.js
+JavaScript
+
+// file: backend/routes/variantPay.js
 import express from "express";
-import axios from "axios"; // Ensure you have axios installed for backend API calls
+import axios from "axios";
 import crypto from "crypto";
 
 import User from "../models/User.js"; 
@@ -9,56 +11,52 @@ import Plan from "../models/Plan.js";
 
 const router = express.Router();
 
-// 1. VariantPay Configuration
-const VARIANTPAY_API_ENDPOINT = process.env.VARIANTPAY_API_ENDPOINT || "https://payments.variantpay.com/cbs/ccs/initiate";
+[cite_start]// Production API endpoint from documentation [cite: 4]
+const VARIANTPAY_API_ENDPOINT = process.env.VARIANTPAY_API_ENDPOINT || "https://payments.variantpay.com/cbs/uni/initiate";
 const VARIANTPAY_HEADERS = {
   'client-id': process.env.VARIANTPAY_CLIENT_ID,
   'fps3-api-key': process.env.VARIANTPAY_API_KEY,
   'client-secret': process.env.VARIANTPAY_CLIENT_SECRET,
   'service-secret': process.env.VARIANTPAY_SERVICE_SECRET,
   'accept': 'application/json',
-  'content-type': 'application/json', // Required headers for VariantPay API [cite: 537]
+  'content-type': 'application/json',
 };
 
-// 1️⃣ Initiate Transaction (Replaces Razorpay's /create-order)
-// This endpoint calls the VariantPay API to get a payment link.
 router.post("/initiate-transaction", async (req, res) => {
   try {
-    const { amount, clientReferenceId } = req.body; 
-    
-    // Note: clientReferenceId must be unique for every transaction (min 10, max 30 chars) [cite: 540]
-    // The amount should be sent as a string and in the smallest unit (e.g., 10.00) if the API expects it.
-    // The documentation shows transfer_amount as string, e.g., "10.00"[cite: 729].
+    // ❗ FIX: Destructure userDetails along with other fields
+    const { amount, clientReferenceId, userDetails } = req.body; 
+
+    // Construct the payload
     const payload = {
       reference_id: clientReferenceId, 
-      from_account: process.env.VARIANTPAY_FROM_ACCOUNT, // Your VariantPay Account ID [cite: 727]
-      transfer_amount: amount.toFixed(2), // Ensure amount is formatted as a string with 2 decimal places
-      transfer_type: "1", // Fixed for Purchase Transaction (HPP) [cite: 701, 730]
-      currency_code: "INR", // Fixed [cite: 728]
+      from_account: process.env.VARIANTPAY_FROM_ACCOUNT, 
+      transfer_amount: amount.toFixed(2), 
+      transfer_type: "1", // Assuming '1' is the Purchase/HPP code
+      currency_code: "INR", 
       purpose_message: "Purchase Transaction", 
+      
+      // ❗ FIX: Use destructured userDetails
+      beneficiary_name: userDetails?.name, 
+      sender_mobile: userDetails?.mobile,
+      beneficiary_mobile: userDetails?.mobile, // Often required for Pay-in/HPP
     };
 
     const response = await axios.post(VARIANTPAY_API_ENDPOINT, payload, { 
         headers: VARIANTPAY_HEADERS,
-        // Set a recommended timeout (e.g., 60 seconds) [cite: 660]
         timeout: 60000, 
     });
 
     const responseData = response.data;
-
-    // Assuming the response is decrypted or unencrypted for the initiation step (Hosted Payment Page flow)
-    // In a production setup, you may need to decrypt this response if using Direct API (Method B) [cite: 762]
     if (responseData.status === "SUCCESS" && responseData.responseCode === "PG00000") {
       
-      const paymentLink = responseData.paymentLink?.linkUrl; // Extract the redirect URL [cite: 775]
+      const paymentLink = responseData.paymentLink?.linkUrl; 
 
       if (!paymentLink) {
          throw new Error("VariantPay initiation successful but no payment link returned.");
       }
 
       console.log("VariantPay Initiation SUCCESS:", responseData.sanTxnId);
-      
-      // Respond to the client with the link to redirect the customer
       res.json({
         success: true,
         sanTxnId: responseData.sanTxnId,
@@ -75,10 +73,8 @@ router.post("/initiate-transaction", async (req, res) => {
       });
     }
   } catch (error) {
-    // ❗ CRITICAL FIX: Log the actual error details from Axios response
     if (axios.isAxiosError(error) && error.response) {
       console.error("VariantPay API Error Response Status:", error.response.status);
-      // This line will print the error message and code from the VariantPay API (e.g., E005)
       console.error("VariantPay API Error Response Data:", error.response.data); 
     } else {
       console.error("Initiate transaction non-Axios error:", error.message);
@@ -87,31 +83,15 @@ router.post("/initiate-transaction", async (req, res) => {
   }
 });
 
-// 2️⃣ Payment Callback (Replaces Razorpay's /verify-payment logic)
-// This endpoint is the Webhook registered with VariantPay to receive final status.
-router.post("/callback", async (req, res) => { // ❗ Make function async
-  const callbackData = req.body; // Callback request will be sent in JSON format [cite: 419]
+router.post("/callback", async (req, res) => { 
+  const callbackData = req.body; 
   console.log("VariantPay Callback Received:", callbackData);
 
   const { sanTxnId, status, responseCode, cTxnId, amount, bankReferenceNumber } = callbackData;
-
-  // IMPORTANT: You must find the *initial* order data you stored before the redirect
-  // using your unique reference ID, which is the cTxnId.
-  // Assuming 'cTxnId' contains the necessary info or can retrieve the plan/user.
-  // In a full application, you would query your temporary 'Order' or 'Pending Payment' collection here.
-
-  // --- **SIMULATED SUBSCRIPTION UPDATE LOGIC** ---
-  // Since we don't have the temporary order collection, we'll assume the cTxnId
-  // is passed back from a successful initiation (Step 1) and we'll use a placeholder
-  // to link it back to a user and plan.
-  
-  // 1. **Find the Initial Transaction (cTxnId)**
-  // In a real app, you would query your DB for an order linked to cTxnId. 
-  // For this example, we'll assume you retrieve the userId and planId successfully.
-  const tempUserId = "USER_ID_FROM_DB"; // Placeholder: Replace with actual logic
-  const tempPlanId = "PLAN_ID_FROM_DB"; // Placeholder: Replace with actual logic
-  const tempBillingType = "yearly"; // Placeholder: Replace with actual logic
-  const tempAmount = amount; // Use amount from callback for security
+  const tempUserId = "USER_ID_FROM_DB"; 
+  const tempPlanId = "PLAN_ID_FROM_DB"; 
+  const tempBillingType = "yearly"; 
+  const tempAmount = amount; 
 
   if (!tempUserId || !tempPlanId) {
     console.error(`Callback: Cannot find order for cTxnId: ${cTxnId}`);
@@ -120,7 +100,6 @@ router.post("/callback", async (req, res) => { // ❗ Make function async
 
   try {
       if (status === "SUCCESS" && responseCode === "PG00000") {
-        // 2. **Process SUCCESS**
         console.log(`Payment SUCCESS for cTxnId: ${cTxnId}, sanTxnId: ${sanTxnId}`);
         
         const plan = await Plan.findById(tempPlanId);
@@ -129,7 +108,6 @@ router.post("/callback", async (req, res) => { // ❗ Make function async
         const oneYear = 365 * 24 * 60 * 60 * 1000;
         const validUntil = new Date(Date.now() + oneYear);
 
-        // Record the payment
         await Payment.create({
             user: tempUserId,
             plan: tempPlanId,
@@ -141,18 +119,14 @@ router.post("/callback", async (req, res) => { // ❗ Make function async
             currency: "INR", 
         });
 
-        // Update the User's subscription
         await User.findByIdAndUpdate(tempUserId, {
             subscriptionPlan: tempPlanId,
             subscriptionStatus: "active",
             nextBillingDate: validUntil,
-            // The pre-save hook on User model handles setting monthlyQuota, usageCount
         });
 
       } else if (status === "FAILURE" && responseCode === "PG0000F") {
-        // 2. **Process FAILURE**
         console.log(`Payment FAILURE for cTxnId: ${cTxnId}`);
-        // Record payment as failed
         await Payment.create({
             user: tempUserId,
             plan: tempPlanId,
@@ -167,10 +141,8 @@ router.post("/callback", async (req, res) => { // ❗ Make function async
       }
   } catch (error) {
       console.error("Error processing VariantPay callback:", error);
-      // In a real application, you would log this error and maybe notify an admin.
   }
 
-  // Respond with 200 OK quickly to acknowledge receipt and prevent retries [cite: 602]
   res.status(200).send("OK");
 });
 

@@ -11,6 +11,12 @@ export function CheckoutPage() {
   const navigate = useNavigate();
   const { isLoggedIn, profile  } = useContext(AuthContext);
   const [plan, setPlan] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [contactInfo, setContactInfo] = useState({
+    name: profile?.name || "",
+    email: profile?.email || "",
+    mobile: "", 
+  });
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -26,7 +32,15 @@ export function CheckoutPage() {
       return;
     }
     setPlan(selectedPlan);
-  }, [isLoggedIn, navigate]);
+
+    if (profile?.name && profile?.email) {
+      setContactInfo(prev => ({ 
+        ...prev, 
+        name: profile.name, 
+        email: profile.email 
+      }));
+    }
+  }, [isLoggedIn, navigate, profile]);
 
   // razorpay logic
   // const handlePayment = async () => {
@@ -114,34 +128,32 @@ export function CheckoutPage() {
       toast.error("Plan is missing");
     };
 
+    if (!contactInfo.mobile) {
+      toast.error("Please provide your mobile number.");
+      return;
+    }
+
     const currentPlan = plan;
     const currentUser = profile;
     if (!currentUser?._id) {
       toast.error("User profile not loaded yet", { autoClose: 2000 });
       return;
     }
+    setLoading(true);
 
     try {
-      // 1️⃣ VariantPay: Initiate Transaction (HPP Flow)
-      // clientReferenceId: A unique ID for your order, required by VariantPay [cite: 540]
       const clientReferenceId = `SKEYLET_${currentUser._id}_${Date.now()}`; 
 
       const { data: initRes } = await axiosClient.post("/payments/initiate-transaction", {
         amount: plan.selectedPrice, // Your price
         clientReferenceId: clientReferenceId,
+        userDetails: {
+            name: contactInfo.name,
+            mobile: contactInfo.mobile,
+        }
       });
 
       if (initRes.success) {
-        // 2️⃣ VariantPay: Redirect the user to the Hosted Payment Page (HPP)
-        // Store transaction details (sanTxnId, cTxnId, planId, billingType, etc.) in your database 
-        // *before* redirecting, to verify them later in the callback.
-        
-        // **NOTE:** For a complete implementation, you'd store the initial transaction 
-        // with status 'pending' here. For this example, we proceed with redirection.
-
-        // We'll simulate the successful subscription update after the payment is verified 
-        // in a subsequent step on the callback.
-        
         window.location.href = initRes.redirectUrl; // Redirect to VariantPay HPP
 
       } else {
@@ -195,13 +207,52 @@ export function CheckoutPage() {
             </ul>
           )}
         </div>
+        
+        {/* ❗ Contact/Billing Information Section (from previous step) */}
+        <div className="border rounded-xl shadow-md p-6 mb-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Contact Details</h3>
+            <div className="space-y-4">
+                <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+                    <input
+                        type="text"
+                        id="name"
+                        value={contactInfo.name}
+                        onChange={(e) => setContactInfo({ ...contactInfo, name: e.target.value })}
+                        disabled={!!profile?.name} 
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="mobile" className="block text-sm font-medium text-gray-700">Mobile Number (Required)</label>
+                    <input
+                        type="tel"
+                        id="mobile"
+                        placeholder="e.g., 9876543210"
+                        value={contactInfo.mobile}
+                        onChange={(e) => setContactInfo({ ...contactInfo, mobile: e.target.value })}
+                        required
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                    />
+                </div>
+            </div>
+        </div>
 
         {/* Payment Button */}
         <Button
           onClick={handlePayment}
+          disabled={loading}
           className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-lg font-semibold transition-all duration-300"
         >
-          Proceed to Pay
+          {loading ? (
+            <span className="flex items-center justify-center">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Processing...
+            </span>
+          ) : "Proceed to Pay"}
         </Button>
 
         {/* Disclaimer */}
