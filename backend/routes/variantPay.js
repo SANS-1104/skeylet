@@ -30,14 +30,14 @@ router.post("/initiate-transaction", async (req, res) => {
       reference_id: clientReferenceId, 
       from_account: process.env.VARIANTPAY_FROM_ACCOUNT, 
       transfer_amount: amount.toFixed(2), 
-      transfer_type: "1", // Assuming '1' is the Purchase/HPP code
+      transfer_type: "1", 
       currency_code: "INR", 
       purpose_message: "Purchase Transaction", 
-      
-      // ❗ FIX: Use destructured userDetails
       beneficiary_name: userDetails?.name, 
       sender_mobile: userDetails?.mobile,
-      beneficiary_mobile: userDetails?.mobile, // Often required for Pay-in/HPP
+      beneficiary_mobile: userDetails?.mobile,
+      to_account: process.env.VARIANTPAY_TO_ACCOUNT,
+      bank_id: process.env.VARIANTPAY_BANK_ID, 
     };
 
     const response = await axios.post(VARIANTPAY_API_ENDPOINT, payload, { 
