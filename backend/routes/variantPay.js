@@ -30,7 +30,7 @@ router.post("/initiate-transaction", async (req, res) => {
       reference_id: clientReferenceId, 
       from_account: process.env.VARIANTPAY_FROM_ACCOUNT, 
       transfer_amount: amount.toFixed(2), 
-      transfer_type: "3", 
+      transfer_type: "1", 
       currency_code: "INR", 
       purpose_message: "Purchase Transaction", 
       beneficiary_name: userDetails?.name, 
