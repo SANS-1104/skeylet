@@ -593,74 +593,111 @@ router.post("/initiate-transaction", async (req, res) => {
       });
     }
     
-    // userDetails.name and userDetails.mobile validation is technically optional for the
-    // *initiation* step, but good practice. Keeping for safety, but the key fix is below.
-    if (!userDetails || !userDetails.name) {
-      return res.status(400).json({
-        success: false,
-        message: "userDetails.name is required",
-      });
-    }
+    // Note: Leaving name/mobile validation as is.
 
-    if (!userDetails.mobile) {
-      return res.status(400).json({
-        success: false,
-        message: "userDetails.mobile is required",
-      });
-    }
+    // 1️⃣ Prepare the minimal JSON payload for HPP initiation
+    // We only include fields that are absolutely required for the transaction ID/link generation.
+    // Card details are intentionally omitted for HPP flow.
+    const rawPayload = {
+      reference_id: clientReferenceId, // [cite: 99]
+      from_account: VARIANTPAY_CONFIG.FROM_ACCOUNT, // [cite: 100]
+      currency_code: VARIANTPAY_CONFIG.CURRENCY_CODE, // [cite: 101]
+      transfer_amount: numericAmount.toFixed(2), // Ensure two decimal places for currency [cite: 102]
+      transfer_type: VARIANTPAY_CONFIG.TRANSFER_TYPE, // "1" [cite: 103]
+      // NOTE: Do not include card fields here as this is for HPP, but encryption is needed.
+      // Optional fields like purpose_message could be added if necessary.
+    };
 
-    // ⭐ CORRECTION: Remove 'card_holder_name' to prevent the gateway from triggering 
-    // the full API Direct Card validation which requires 'card_number', 'card_cvv', etc.
-    // We only send the absolute minimum HPP initiation fields.
-    const formData = new URLSearchParams();
-    formData.append("reference_id", clientReferenceId); // [cite: 74, 99]
-    formData.append("from_account", VARIANTPAY_CONFIG.FROM_ACCOUNT); // [cite: 74, 100]
-    formData.append("transfer_amount", numericAmount.toFixed(2)); // "101.00" [cite: 74, 102]
-    formData.append("transfer_type", VARIANTPAY_CONFIG.TRANSFER_TYPE); // "1" [cite: 74, 103]
-    formData.append("currency_code", VARIANTPAY_CONFIG.CURRENCY_CODE); // "INR" [cite: 74, 101]
-    // formData.append("card_holder_name", userDetails.name); // ❌ REMOVED THIS LINE
+    console.log("[VariantPay-HPP] Raw JSON Payload:", rawPayload);
+
+    // 2️⃣ Encrypt the JSON payload
+    const jsonString = JSON.stringify(rawPayload);
+    const { payload, iv } = encryptPayload(jsonString); // Uses your existing AES helper
+
+    // 3️⃣ Send encrypted payload and IV as form data
+    const encryptedFormData = new URLSearchParams();
+    encryptedFormData.append("payload", payload); // [cite: 94]
+    encryptedFormData.append("iv", iv); // [cite: 95]
+
 
     console.log("[VariantPay-HPP] Posting to:", VARIANTPAY_CONFIG.INITIATE_URL);
-    console.log("[VariantPay-HPP] Form data:", formData.toString());
-
+    console.log("[VariantPay-HPP] Form data (Encrypted):", encryptedFormData.toString());
+    
     // Connection timeout set to 60 seconds as recommended [cite: 33]
     const axiosResponse = await axios.post(
       VARIANTPAY_CONFIG.INITIATE_URL,
-      formData.toString(),
+      encryptedFormData.toString(), // Send the encrypted form data
       {
         headers: {
-          "client-id": VARIANTPAY_CONFIG.CLIENT_ID, // [cite: 70, 85]
-          "fps3-api-key": VARIANTPAY_CONFIG.API_KEY, // [cite: 70, 85]
-          "client-secret": VARIANTPAY_CONFIG.CLIENT_SECRET, // [cite: 70, 85]
-          "service-secret": VARIANTPAY_CONFIG.SERVICE_SECRET, // [cite: 70, 85]
+          "client-id": VARIANTPAY_CONFIG.CLIENT_ID, // [cite: 85]
+          "fps3-api-key": VARIANTPAY_CONFIG.API_KEY, // [cite: 85]
+          "client-secret": VARIANTPAY_CONFIG.CLIENT_SECRET, // [cite: 85]
+          "service-secret": VARIANTPAY_CONFIG.SERVICE_SECRET, // [cite: 85]
           "Content-Type": "application/x-www-form-urlencoded",
           accept: "application/json",
         },
         timeout: 60000,
       }
     );
-
+    
     const vpResponse = axiosResponse.data;
     console.log("[VariantPay-HPP] Raw Response:", vpResponse);
 
-    // HPP/documented purchase leg should return plain JSON with paymentLink
-    // Success code is PG00000 [cite: 145, 162, 190]
+    // 4️⃣ Decrypt Response if necessary (VariantPay documentation shows the response
+    // for Encrypted API Direct is also encrypted, containing the paymentLink inside) [cite: 135]
+    if (vpResponse.payload && vpResponse.iv) {
+        const decryptedJson = decryptPayload(vpResponse.payload, vpResponse.iv);
+        const decryptedResponse = JSON.parse(decryptedJson);
+        console.log("[VariantPay-HPP] Decrypted Response:", decryptedResponse);
+
+        if (
+            decryptedResponse.status === "SUCCESS" &&
+            decryptedResponse.responseCode === "PG00000" &&
+            decryptedResponse.paymentLink?.linkUrl // [cite: 144, 145, 148]
+        ) {
+            return res.json({
+                success: true,
+                redirectUrl: decryptedResponse.paymentLink.linkUrl,
+                sanTxnId: decryptedResponse.sanTxnId,
+                cTxnId: decryptedResponse.cTxnId,
+            });
+        }
+        
+        // Handle decrypted failure
+        console.error(
+            "[VariantPay-HPP] Gateway FAILED (Decrypted):",
+            decryptedResponse.status,
+            decryptedResponse.responseCode,
+            decryptedResponse.message
+        );
+
+        return res.status(400).json({
+            success: false,
+            message: decryptedResponse.message || "VariantPay encrypted initiation failed.",
+            responseCode: decryptedResponse.responseCode,
+            status: decryptedResponse.status,
+            raw: decryptedResponse,
+        });
+
+    }
+    
+    // 5️⃣ Handle plain JSON success/failure (in case the gateway returns unencrypted for HPP)
     if (
-      vpResponse.status === "SUCCESS" &&
-      vpResponse.responseCode === "PG00000" &&
-      vpResponse.paymentLink?.linkUrl
+        vpResponse.status === "SUCCESS" &&
+        vpResponse.responseCode === "PG00000" &&
+        vpResponse.paymentLink?.linkUrl
     ) {
-      return res.json({
-        success: true,
-        redirectUrl: vpResponse.paymentLink.linkUrl, // Redirect URL for the HPP [cite: 63, 148]
-        sanTxnId: vpResponse.sanTxnId,
-        cTxnId: vpResponse.cTxnId,
-      });
+        return res.json({
+            success: true,
+            redirectUrl: vpResponse.paymentLink.linkUrl,
+            sanTxnId: vpResponse.sanTxnId,
+            cTxnId: vpResponse.cTxnId,
+        });
     }
 
-    // Gateway returned a failure / validation error [cite: 163]
+    // Gateway returned an unencrypted, unexpected failure
     console.error(
-      "[VariantPay-HPP] Gateway FAILED:",
+      "[VariantPay-HPP] Gateway FAILED (Unencrypted/Unknown):",
       vpResponse.status,
       vpResponse.responseCode,
       vpResponse.message
@@ -676,6 +713,7 @@ router.post("/initiate-transaction", async (req, res) => {
       raw: vpResponse,
     });
   } catch (err) {
+    // ... (rest of error handling)
     console.error(
       "[VariantPay-HPP] Error calling VariantPay:",
       err.response?.status,
