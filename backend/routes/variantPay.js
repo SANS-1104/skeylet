@@ -606,6 +606,11 @@ router.post("/initiate-transaction", async (req, res) => {
       transfer_type: VARIANTPAY_CONFIG.TRANSFER_TYPE, // "1" [cite: 103]
       // NOTE: Do not include card fields here as this is for HPP, but encryption is needed.
       // Optional fields like purpose_message could be added if necessary.
+      "card_number": "", 
+      "card_expiry_month": "", 
+      "card_expiry_year": "", 
+      "card_cvv": "", 
+      "card_holder_name": userDetails.name || "",
     };
 
     console.log("[VariantPay-HPP] Raw JSON Payload:", rawPayload);
