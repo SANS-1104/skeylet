@@ -123,48 +123,107 @@ export function CheckoutPage() {
   // };
 
   // variantpay logic
+  // const handlePayment = async () => {
+  //   if (!plan) {
+  //     toast.error("Plan is missing");
+  //   };
+
+  //   if (!contactInfo.mobile) {
+  //     toast.error("Please provide your mobile number.");
+  //     return;
+  //   }
+
+  //   const currentPlan = plan;
+  //   const currentUser = profile;
+  //   if (!currentUser?._id) {
+  //     toast.error("User profile not loaded yet", { autoClose: 2000 });
+  //     return;
+  //   }
+  //   setLoading(true);
+
+  //   try {
+  //     const clientReferenceId = `SKEYLET_${currentUser._id}_${Date.now()}`; 
+
+  //     const { data: initRes } = await axiosClient.post("/payments/initiate-transaction", {
+  //       amount: plan.selectedPrice, // Your price
+  //       clientReferenceId: clientReferenceId,
+  //       userDetails: {
+  //           name: contactInfo.name,
+  //           mobile: contactInfo.mobile,
+  //       }
+  //     });
+
+  //     if (initRes.success) {
+  //       window.location.href = initRes.redirectUrl; // Redirect to VariantPay HPP
+
+  //     } else {
+  //       toast.error(initRes.message || "Failed to initiate VariantPay payment", { autoClose: 2000 });
+  //     }
+
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to initiate payment", { autoClose: 1500 });
+  //   }
+  // };
+
   const handlePayment = async () => {
     if (!plan) {
       toast.error("Plan is missing");
-    };
+      return;
+    }
 
     if (!contactInfo.mobile) {
       toast.error("Please provide your mobile number.");
       return;
     }
 
-    const currentPlan = plan;
     const currentUser = profile;
     if (!currentUser?._id) {
-      toast.error("User profile not loaded yet", { autoClose: 2000 });
+      toast.error("User profile not loaded yet");
       return;
     }
+
     setLoading(true);
 
     try {
-      const clientReferenceId = `SKEYLET_${currentUser._id}_${Date.now()}`; 
+      const clientReferenceId = `SKEYLET_${currentUser._id}_${Date.now()}`;
 
-      const { data: initRes } = await axiosClient.post("/payments/initiate-transaction", {
-        amount: plan.selectedPrice, // Your price
+      // 1️⃣ Save order BEFORE calling VariantPay
+      await axiosClient.post("/payments/create-order", {
+        user: currentUser._id,
+        plan: plan._id,
+        amount: plan.selectedPrice,
         clientReferenceId: clientReferenceId,
-        userDetails: {
-            name: contactInfo.name,
-            mobile: contactInfo.mobile,
-        }
+        status: "pending",
       });
 
+      // 2️⃣ Initiate VariantPay HPP flow
+      const { data: initRes } = await axiosClient.post(
+        "/payments/initiate-transaction",
+        {
+          amount: plan.selectedPrice,
+          clientReferenceId,
+          userDetails: {
+            name: contactInfo.name,
+            mobile: contactInfo.mobile,
+          },
+        }
+      );
+
       if (initRes.success) {
-        window.location.href = initRes.redirectUrl; // Redirect to VariantPay HPP
-
+        // 3️⃣ Redirect to hosted payment page
+        window.location.href = initRes.redirectUrl;
       } else {
-        toast.error(initRes.message || "Failed to initiate VariantPay payment", { autoClose: 2000 });
+        toast.error(initRes.message || "Failed to initiate VariantPay payment");
       }
-
     } catch (err) {
       console.error(err);
-      toast.error("Failed to initiate payment", { autoClose: 1500 });
+      toast.error("Failed to initiate payment");
+    } finally {
+      setLoading(false);
     }
   };
+
 
   if (!plan) return null;
   const region = navigator.language === "en-IN" ? "IN" : "US";
