@@ -109,6 +109,56 @@ function decryptPayload(payloadDoubleBase64, ivBase64) {
   return decryptedBuf.toString("utf8");
 }
 
+// -------------------------------------------------------
+// CREATE ORDER BEFORE INITIATING VARIANTPAY PAYMENT
+// -------------------------------------------------------
+router.post("/create-order", async (req, res) => {
+  try {
+    const { user, plan, amount, clientReferenceId } = req.body;
+
+    if (!user || !plan || !amount || !clientReferenceId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
+    }
+
+    // Check if order already exists (prevent duplicates)
+    const existing = await Payment.findOne({ clientReferenceId });
+    if (existing) {
+      return res.json({
+        success: true,
+        message: "Order already exists",
+        orderId: existing._id,
+      });
+    }
+
+    // Save initial order
+    const newOrder = await Payment.create({
+      user,
+      plan,
+      amount,
+      clientReferenceId,   // 🔥 This MUST match VariantPay cTxnId
+      status: "pending",   // Initial status
+      method: "variantpay",
+      currency: "INR",
+    });
+
+    return res.json({
+      success: true,
+      message: "Order created",
+      orderId: newOrder._id,
+    });
+
+  } catch (err) {
+    console.error("[VariantPay] create-order error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error while creating order",
+    });
+  }
+});
+
 
 router.post("/initiate-transaction", async (req, res) => {
   try {
