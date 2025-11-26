@@ -424,7 +424,7 @@ const router = express.Router();
 const VARIANTPAY_CONFIG = {
   INITIATE_URL:
     process.env.VARIANTPAY_API_ENDPOINT ||
-    "https://payments.variantpay.com/cbs/ccs/commit 37hpp/initiate",
+    "https://payments.variantpay.com/cbs/ccs/hpp/initiate",
 
   CLIENT_ID: process.env.VARIANTPAY_CLIENT_ID,
   API_KEY: process.env.VARIANTPAY_API_KEY,
