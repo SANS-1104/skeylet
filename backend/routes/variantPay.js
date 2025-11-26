@@ -194,24 +194,36 @@ function encryptPayload(jsonString) {
     throw new Error("VariantPay secret key not configured");
   }
 
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv("aes-256-cbc", KEY_BUFFER, iv);
+  // Generate 16-char ASCII IV (matching VariantPay PHP sample)
+  const ivString = crypto
+    .createHash("sha256")
+    .update(crypto.randomUUID()) // uniqid() equivalent
+    .digest("hex")
+    .substring(0, 16); // MUST be 16 characters
+
+  const ivBuffer = Buffer.from(ivString, "utf8");
+
+  const cipher = crypto.createCipheriv("aes-256-cbc", KEY_BUFFER, ivBuffer);
 
   let encrypted = cipher.update(jsonString, "utf8", "base64");
   encrypted += cipher.final("base64");
 
   return {
     payload: encrypted,
-    iv: iv.toString("base64"),
+    iv: Buffer.from(ivString, "utf8").toString("base64"), // IMPORTANT
   };
 }
+
 
 function decryptPayload(payloadBase64, ivBase64) {
   if (!KEY_BUFFER) {
     throw new Error("VariantPay secret key not configured");
   }
 
-  const iv = Buffer.from(ivBase64, "base64");
+  // Convert Base64 → ASCII string → Buffer
+  const ivString = Buffer.from(ivBase64, "base64").toString("utf8");
+  const iv = Buffer.from(ivString, "utf8");
+
   const decipher = crypto.createDecipheriv("aes-256-cbc", KEY_BUFFER, iv);
 
   let decrypted = decipher.update(payloadBase64, "base64", "utf8");
@@ -219,6 +231,7 @@ function decryptPayload(payloadBase64, ivBase64) {
 
   return decrypted;
 }
+
 
 // ---------------------------------------------------------------------
 //  POST /variantpay/initiate-transaction
