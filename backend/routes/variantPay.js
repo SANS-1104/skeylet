@@ -573,9 +573,19 @@ router.post("/create-order", async (req, res) => {
 
 router.post("/initiate-transaction", async (req, res) => {
   try {
-    const { amount, clientReferenceId, userDetails } = req.body;
+    const { user, plan, amount, clientReferenceId } = req.body;
 
     console.log("[VariantPay-HPP] Request received:", req.body);
+
+    // -------------------------------
+    // 🔍 Validate Inputs
+    // -------------------------------
+    if (!user || !plan || !amount || !clientReferenceId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields (user, plan, amount, clientReferenceId)",
+      });
+    }
 
     const numericAmount = Number(amount);
     if (!numericAmount || numericAmount <= 0) {
@@ -585,36 +595,28 @@ router.post("/initiate-transaction", async (req, res) => {
       });
     }
 
-    if (!clientReferenceId) {
-      return res.status(400).json({
-        success: false,
-        message: "clientReferenceId is required",
-      });
-    }
-
-    if (!userDetails?.name) {
-      return res.status(400).json({
-        success: false,
-        message: "userDetails.name is required",
-      });
-    }
-
-    // ⭐ RAW JSON PAYLOAD (same as working example)
-    const payload = {
-      reference_id: clientReferenceId,
+    // -------------------------------
+    // 🧾 Create VariantPay payload 
+    // (Merged Code 1 logic)
+    // -------------------------------
+    const data = {
+      reference_id: clientReferenceId, // MUST MATCH order.clientReferenceId
       from_account: VARIANTPAY_CONFIG.FROM_ACCOUNT,
       transfer_amount: numericAmount.toFixed(2),
-      currency_code: "INR",
       transfer_type: "1",
-      purpose_message: `Payment for ${clientReferenceId}`,
-      card_holder_name: userDetails.name
+      currency_code: "INR",
+      purpose_message: "Order Payment",
     };
 
-    console.log("[VariantPay-HPP] Sending RAW payload:", payload);
+    console.log("[VariantPay-HPP] Sending payload:", data);
 
+    // -------------------------------
+    // 🔗 Call VariantPay Initiate API 
+    // (Merged Code 1 logic)
+    // -------------------------------
     const axiosResponse = await axios.post(
-      VARIANTPAY_CONFIG.INITIATE_URL, // same as working code
-      payload, //⭐ RAW JSON, NOT FORM DATA
+      VARIANTPAY_CONFIG.INITIATE_URL,
+      data,
       {
         headers: {
           "client-id": VARIANTPAY_CONFIG.CLIENT_ID,
@@ -630,19 +632,24 @@ router.post("/initiate-transaction", async (req, res) => {
     const vpResponse = axiosResponse.data;
     console.log("[VariantPay-HPP] Raw PG Response:", vpResponse);
 
-    // SUCCESS → Return hosted HPP link
-    if (vpResponse?.paymentLink?.linkUrl) {
+    // -------------------------------
+    // 🎯 Return Hosted Payment Link
+    // -------------------------------
+    const link = vpResponse?.paymentLink?.linkUrl;
+
+    if (link) {
       return res.json({
         success: true,
-        redirectUrl: vpResponse.paymentLink.linkUrl,
+        redirectUrl: link,
         sanTxnId: vpResponse.sanTxnId,
-        cTxnId: vpResponse.cTxnId,
+        cTxnId: clientReferenceId,
       });
     }
 
+    // If no link returned
     return res.status(400).json({
       success: false,
-      message: vpResponse.message || "PaymentLink missing in PG response",
+      message: vpResponse?.message || "PaymentLink missing in VariantPay response",
       raw: vpResponse,
     });
 
@@ -654,6 +661,7 @@ router.post("/initiate-transaction", async (req, res) => {
     });
   }
 });
+
 
 router.post("/callback", async (req, res) => {
   try {
