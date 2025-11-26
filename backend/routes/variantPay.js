@@ -577,7 +577,6 @@ router.post("/initiate-transaction", async (req, res) => {
 
     console.log("[VariantPay-HPP] Request received:", req.body);
 
-    // Basic validation
     const numericAmount = Number(amount);
     if (!numericAmount || numericAmount <= 0) {
       return res.status(400).json({
@@ -592,144 +591,66 @@ router.post("/initiate-transaction", async (req, res) => {
         message: "clientReferenceId is required",
       });
     }
-    
-    // Note: Leaving name/mobile validation as is.
 
-    // 1️⃣ Prepare the minimal JSON payload for HPP initiation
-    // We only include fields that are absolutely required for the transaction ID/link generation.
-    // Card details are intentionally omitted for HPP flow.
-    const rawPayload = {
-      reference_id: clientReferenceId, // [cite: 99]
-      from_account: VARIANTPAY_CONFIG.FROM_ACCOUNT, // [cite: 100]
-      currency_code: VARIANTPAY_CONFIG.CURRENCY_CODE, // [cite: 101]
-      transfer_amount: numericAmount.toFixed(2), // Ensure two decimal places for currency [cite: 102]
-      transfer_type: VARIANTPAY_CONFIG.TRANSFER_TYPE, // "1" [cite: 103]
-      // NOTE: Do not include card fields here as this is for HPP, but encryption is needed.
-      // Optional fields like purpose_message could be added if necessary.
-      "card_number": "", 
-      "card_expiry_month": "", 
-      "card_expiry_year": "", 
-      "card_cvv": "", 
-      "card_holder_name": userDetails.name || "",
+    if (!userDetails?.name) {
+      return res.status(400).json({
+        success: false,
+        message: "userDetails.name is required",
+      });
+    }
+
+    // ⭐ RAW JSON PAYLOAD (same as working example)
+    const payload = {
+      reference_id: clientReferenceId,
+      from_account: VARIANTPAY_CONFIG.FROM_ACCOUNT,
+      transfer_amount: numericAmount.toFixed(2),
+      currency_code: "INR",
+      transfer_type: "1",
+      purpose_message: `Payment for ${clientReferenceId}`,
+      card_holder_name: userDetails.name
     };
 
-    console.log("[VariantPay-HPP] Raw JSON Payload:", rawPayload);
+    console.log("[VariantPay-HPP] Sending RAW payload:", payload);
 
-    // 2️⃣ Encrypt the JSON payload
-    const jsonString = JSON.stringify(rawPayload);
-    const { payload, iv } = encryptPayload(jsonString); // Uses your existing AES helper
-
-    // 3️⃣ Send encrypted payload and IV as form data
-    const encryptedFormData = new URLSearchParams();
-    encryptedFormData.append("payload", payload); // [cite: 94]
-    encryptedFormData.append("iv", iv); // [cite: 95]
-
-
-    console.log("[VariantPay-HPP] Posting to:", VARIANTPAY_CONFIG.INITIATE_URL);
-    console.log("[VariantPay-HPP] Form data (Encrypted):", encryptedFormData.toString());
-    
-    // Connection timeout set to 60 seconds as recommended [cite: 33]
     const axiosResponse = await axios.post(
-      VARIANTPAY_CONFIG.INITIATE_URL,
-      encryptedFormData.toString(), // Send the encrypted form data
+      VARIANTPAY_CONFIG.INITIATE_URL, // same as working code
+      payload, //⭐ RAW JSON, NOT FORM DATA
       {
         headers: {
-          "client-id": VARIANTPAY_CONFIG.CLIENT_ID, // [cite: 85]
-          "fps3-api-key": VARIANTPAY_CONFIG.API_KEY, // [cite: 85]
-          "client-secret": VARIANTPAY_CONFIG.CLIENT_SECRET, // [cite: 85]
-          "service-secret": VARIANTPAY_CONFIG.SERVICE_SECRET, // [cite: 85]
-          "Content-Type": "application/x-www-form-urlencoded",
-          accept: "application/json",
+          "client-id": VARIANTPAY_CONFIG.CLIENT_ID,
+          "fps3-api-key": VARIANTPAY_CONFIG.API_KEY,
+          "client-secret": VARIANTPAY_CONFIG.CLIENT_SECRET,
+          "service-secret": VARIANTPAY_CONFIG.SERVICE_SECRET,
+          "Content-Type": "application/json",
         },
         timeout: 60000,
       }
     );
-    
+
     const vpResponse = axiosResponse.data;
-    console.log("[VariantPay-HPP] Raw Response:", vpResponse);
+    console.log("[VariantPay-HPP] Raw PG Response:", vpResponse);
 
-    // 4️⃣ Decrypt Response if necessary (VariantPay documentation shows the response
-    // for Encrypted API Direct is also encrypted, containing the paymentLink inside) [cite: 135]
-    if (vpResponse.payload && vpResponse.iv) {
-        const decryptedJson = decryptPayload(vpResponse.payload, vpResponse.iv);
-        const decryptedResponse = JSON.parse(decryptedJson);
-        console.log("[VariantPay-HPP] Decrypted Response:", decryptedResponse);
-
-        if (
-            decryptedResponse.status === "SUCCESS" &&
-            decryptedResponse.responseCode === "PG00000" &&
-            decryptedResponse.paymentLink?.linkUrl // [cite: 144, 145, 148]
-        ) {
-            return res.json({
-                success: true,
-                redirectUrl: decryptedResponse.paymentLink.linkUrl,
-                sanTxnId: decryptedResponse.sanTxnId,
-                cTxnId: decryptedResponse.cTxnId,
-            });
-        }
-        
-        // Handle decrypted failure
-        console.error(
-            "[VariantPay-HPP] Gateway FAILED (Decrypted):",
-            decryptedResponse.status,
-            decryptedResponse.responseCode,
-            decryptedResponse.message
-        );
-
-        return res.status(400).json({
-            success: false,
-            message: decryptedResponse.message || "VariantPay encrypted initiation failed.",
-            responseCode: decryptedResponse.responseCode,
-            status: decryptedResponse.status,
-            raw: decryptedResponse,
-        });
-
+    // SUCCESS → Return hosted HPP link
+    if (vpResponse?.paymentLink?.linkUrl) {
+      return res.json({
+        success: true,
+        redirectUrl: vpResponse.paymentLink.linkUrl,
+        sanTxnId: vpResponse.sanTxnId,
+        cTxnId: vpResponse.cTxnId,
+      });
     }
-    
-    // 5️⃣ Handle plain JSON success/failure (in case the gateway returns unencrypted for HPP)
-    if (
-        vpResponse.status === "SUCCESS" &&
-        vpResponse.responseCode === "PG00000" &&
-        vpResponse.paymentLink?.linkUrl
-    ) {
-        return res.json({
-            success: true,
-            redirectUrl: vpResponse.paymentLink.linkUrl,
-            sanTxnId: vpResponse.sanTxnId,
-            cTxnId: vpResponse.cTxnId,
-        });
-    }
-
-    // Gateway returned an unencrypted, unexpected failure
-    console.error(
-      "[VariantPay-HPP] Gateway FAILED (Unencrypted/Unknown):",
-      vpResponse.status,
-      vpResponse.responseCode,
-      vpResponse.message
-    );
 
     return res.status(400).json({
       success: false,
-      message:
-        vpResponse.message ||
-        "VariantPay initiation failed. Check merchant configuration / request fields.",
-      responseCode: vpResponse.responseCode,
-      status: vpResponse.status,
+      message: vpResponse.message || "PaymentLink missing in PG response",
       raw: vpResponse,
     });
-  } catch (err) {
-    // ... (rest of error handling)
-    console.error(
-      "[VariantPay-HPP] Error calling VariantPay:",
-      err.response?.status,
-      err.response?.data || err.message
-    );
 
+  } catch (err) {
+    console.error("VariantPay ERROR:", err.response?.data || err.message);
     return res.status(500).json({
       success: false,
-      message:
-        err.response?.data?.message ||
-        "Internal server error while contacting VariantPay",
+      error: err.response?.data || err.message,
     });
   }
 });
