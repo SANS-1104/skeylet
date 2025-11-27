@@ -20,16 +20,15 @@ function encryptPayload(data) {
     .createHash("sha256")
     .update(crypto.randomUUID())
     .digest("hex")
-    .substring(0, 16);                     // PHP: substr(hash('sha256', uniqid()),0,16)
+    .substring(0, 16);
 
   const iv = Buffer.from(ivString, "utf8");
 
-  const key = crypto
-    .createHash("sha256")
-    .update(SECRET_KEY, "utf8")
-    .digest();                              // 32 byte key like PHP
+  // IMPORTANT FIX — USE SECRET KEY AS RAW BYTES
+  const key = Buffer.from(SECRET_KEY, "utf8");  // 32 bytes EXACTLY
 
   const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+
   let encrypted = cipher.update(JSON.stringify(data), "utf8", "base64");
   encrypted += cipher.final("base64");
 
@@ -41,7 +40,7 @@ function encryptPayload(data) {
 
 // decrypt VariantPay response
 function decryptVariantPayResponse(resp) {
-  const key = crypto.createHash("sha256").update(SECRET_KEY).digest();
+  const key = Buffer.from(SECRET_KEY, "utf8");  // RAW BYTES, NOT HASHED
   const ivBuf = Buffer.from(resp.iv, "base64");
 
   const decipher = crypto.createDecipheriv("aes-256-cbc", key, ivBuf);
