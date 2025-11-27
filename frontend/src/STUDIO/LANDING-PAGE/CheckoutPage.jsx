@@ -124,33 +124,23 @@ export function CheckoutPage() {
 
   // variantpay logic
   const handlePayment = async () => {
-  if (!plan) return toast.error("Plan missing");
-
-  const currentPlan = plan;
-  const currentUser = profile;
-
   try {
     setLoading(true);
 
-    // 1️⃣ Request payment URL
     const { data } = await axiosClient.post("/payments/create-payment", {
-      amount: currentPlan.selectedPrice,
-      userId: currentUser._id,
+      amount: plan.selectedPrice,
       name: contactInfo.name,
-      email: contactInfo.email,
       mobile: contactInfo.mobile,
     });
 
     if (!data.success) {
-      toast.error("Unable to initiate payment");
+      toast.error(data.message);
       return;
     }
 
-    // 2️⃣ Redirect user to VariantPay Hosted Payment Page
     window.location.href = data.paymentLink;
   } catch (err) {
-    console.error(err);
-    toast.error("Failed to create payment");
+    toast.error("Payment failed");
   } finally {
     setLoading(false);
   }
