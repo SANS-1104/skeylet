@@ -31,7 +31,7 @@ export function Header() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
           whileHover={{ scale: 1.05 }}
-          className="flex items-center gap-2 cursor-pointer"
+          className="gap-10 lg:gap-2 flex items-center justify-center cursor-pointer "
         >
           <motion.div
             animate={{ rotate: [0, 360] }}
@@ -40,7 +40,7 @@ export function Header() {
           >
             <Sparkles className="w-6 h-6 text-white" />
           </motion.div>
-          <span className="text-xl text-white">Skeylet</span>
+          <span className="text-3xl lg:text-2xl text-white">Skeylet</span>
         </motion.div>
 
         {/* Centered Nav Links */}
@@ -48,7 +48,7 @@ export function Header() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="flex-1 flex justify-center items-center gap-8"
+          className="hidden lg:flex flex-1 justify-center items-center gap-8"
         >
           {["Features", "How It Works", "Pricing", "Testimonials"].map((item, i) => (
             <motion.a
@@ -69,7 +69,7 @@ export function Header() {
         </motion.nav>
 
         {/* Empty div to keep spacing consistent (removes buttons) */}
-        <div className="w-24"></div>
+        <div className="hidden lg:block w-24"></div>
       </div>
     </motion.header>
   );

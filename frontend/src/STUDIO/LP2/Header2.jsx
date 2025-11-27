@@ -106,9 +106,9 @@ export function Header2() {
               Log Out
             </Button>
           </motion.div>
-          <Button variant="ghost" size="icon" className="md:hidden text-white">
+          {/* <Button variant="ghost" size="icon" className="md:hidden text-white">
             <Menu className="w-5 h-5" />
-          </Button>
+          </Button> */}
         </motion.div>
       </div>
     </motion.header>
