@@ -189,15 +189,6 @@ export function ProfilePage() {
     return user?.email?.charAt(0).toUpperCase() || "U";
   };
 
-
-  // const [profileEditForm, setProfileEditForm] = useState({
-  //   firstName: firstName || '',
-  //   lastName: lastName || '',
-  //   email: user?.email || '',
-  //   jobPost: user?.jobPost || ''
-  // });
-
-
   const handleSaveProfile = async () => {
     try {
       const res = await axiosClient.put("/profile", {
@@ -288,13 +279,341 @@ export function ProfilePage() {
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Profile Information */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  
+  {/* LEFT SECTION (Profile + Platforms) */}
+  <div className="lg:col-span-2 space-y-6">
+
+    {/* USER PROFILE CARD */}
+    <Card className="bg-gradient-to-br from-white to-indigo-50/30 border-0 shadow-lg">
+      <CardHeader>
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <CardTitle className="flex items-center gap-2">
+            <UserIcon className="h-4 w-4 text-indigo-600" />
+            Profile Information
+          </CardTitle>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (!isEditing) {
+                setEditForm({
+                  firstName: firstName || "",
+                  lastName: lastName || "",
+                  email: user?.email || "",
+                  jobPost: user?.jobPost || ""
+                });
+              }
+              setIsEditing(!isEditing);
+            }}
+            className="gap-2 w-full md:w-auto"
+          >
+            <Edit className="h-3 w-3" />
+            {isEditing ? "Cancel" : "Edit"}
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full
+            flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+
+            {user?.linkedinProfile?.picture ? (
+              <img
+                src={user.linkedinProfile.picture}
+                alt={`${firstName} ${lastName}`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              getInitials()
+            )}
+
+          </div>
+
+          {/* RIGHT SIDE */}
+          <div className="flex-1 w-full">
+            {isEditing ? (
+              <div className="space-y-4">
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm">First Name</Label>
+                    <Input
+                      value={editForm.firstName}
+                      onChange={(e) =>
+                        setEditForm(prev => ({ ...prev, firstName: e.target.value }))
+                      }
+                      placeholder="First name"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-sm">Last Name</Label>
+                    <Input
+                      value={editForm.lastName}
+                      onChange={(e) =>
+                        setEditForm(prev => ({ ...prev, lastName: e.target.value }))
+                      }
+                      placeholder="Last name"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm">Job Title</Label>
+                  <Input
+                    value={editForm.jobPost}
+                    onChange={(e) =>
+                      setEditForm(prev => ({ ...prev, jobPost: e.target.value }))
+                    }
+                    placeholder="Python Developer"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm">Email</Label>
+                  <Input value={user.email} disabled />
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-3">
+                  <Button
+                    onClick={handleSaveProfile}
+                    className="gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 w-full md:w-auto"
+                  >
+                    <CheckCircle className="h-3 w-3" />
+                    Save Changes
+                  </Button>
+
+                  <Button variant="outline" onClick={() => setIsEditing(false)} className="w-full md:w-auto">
+                    Cancel
+                  </Button>
+                </div>
+
+              </div>
+            ) : (
+              <div className="text-center md:text-left">
+                <h3 className="text-xl font-semibold">{`${firstName} ${lastName}`}</h3>
+                <p className="text-muted-foreground">{user?.jobPost}</p>
+                <p className="text-sm text-muted-foreground break-all">{user?.email}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </CardContent>
+    </Card>
+
+    {/* CONNECTED PLATFORMS CARD */}
+    <Card className="bg-gradient-to-br from-white to-blue-50/30 border-0 shadow-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Globe className="h-4 w-4 text-blue-600" />
+          Connected Platforms
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {platforms.map((platform, index) => {
+          const Icon = platform.icon
+          return (
+            <div
+              key={index}
+              className="flex flex-col md:flex-row md:items-center md:justify-between 
+              p-4 rounded-xl border bg-gradient-to-r from-gray-50 to-white 
+              hover:shadow-md transition-all gap-4"
+            >
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-lg text-white ${platform.color}`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <h4 className="font-semibold flex items-center gap-1">
+                    {platform.name}
+                    {platform.connected ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    )}
+                  </h4>
+
+                  <div className="text-sm text-muted-foreground">
+                    {platform.connected ? (
+                      <>
+                        <div className="flex flex-wrap gap-4">
+                          <span className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {platform.followers} followers
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <BarChart3 className="h-3 w-3" />
+                            {platform.posts} posts
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <Clock className="h-3 w-3" />
+                          Last sync: {platform.lastSync}
+                        </div>
+                      </>
+                    ) : (
+                      <span>Not connected</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 w-full md:w-auto">
+                {platform.connected ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => disConnect(platform.name)}
+                      className="text-red-600 w-full md:w-auto"
+                    >
+                      Disconnect
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleReconnect(platform.name)}
+                      className="text-red-600 w-full md:w-auto"
+                    >
+                      Reconnect
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={() => handlePlatformConnect(platform.name)}
+                    className={`w-full md:w-auto bg-gradient-to-r ${platform.color} text-white`}
+                  >
+                    <Plus className="h-3 w-3" />
+                    Connect
+                  </Button>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </CardContent>
+    </Card>
+
+  </div>
+
+  {/* RIGHT SIDEBAR (Settings / Subscription / Security) */}
+  <div className="space-y-6">
+
+    {/* ACCOUNT SETTINGS */}
+    <Card className="bg-gradient-to-br from-white to-green-50/30 border-0 shadow-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="h-4 w-4 text-green-600" />
+          Account Settings
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div>
+            <Label className="font-medium">Push Notifications</Label>
+            <p className="text-sm text-muted-foreground">
+              Get notified about post performance
+            </p>
+          </div>
+          <Switch checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
+        </div>
+      </CardContent>
+    </Card>
+
+    {/* SUBSCRIPTION CARD */}
+    <Card className="bg-gradient-to-br from-white to-yellow-50/30 border-0 shadow-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0">
+            PRO
+          </Badge>
+          Professional Plan
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Posts this month</span>
+            <span>15/100</span>
+          </div>
+          <Progress value={15} className="h-2" />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>AI generations</span>
+            <span>8/50</span>
+          </div>
+          <Progress value={16} className="h-2" />
+        </div>
+
+        <Separator />
+
+        <div className="text-center space-y-3">
+          <p className="text-sm text-muted-foreground">Renewal: August 24, 2024</p>
+          <Button variant="outline" size="sm" className="w-full gap-2">
+            <CreditCard className="h-3 w-3" />
+            Manage Subscription
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+
+    {/* SECURITY CARD */}
+    <Card className="bg-gradient-to-br from-white to-red-50/30 border-0 shadow-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Shield className="h-4 w-4 text-red-600" />
+          Security
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        <Button variant="outline" className="w-full gap-2">
+          <Settings className="h-4 w-4" />
+          Change Password
+        </Button>
+
+        <Separator />
+
+        <Button
+          variant="outline"
+          className="w-full gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </Button>
+      </CardContent>
+    </Card>
+
+  </div>
+
+</div>
+
+      
+    </div>
+  );
+}
+
+export default ProfilePage;
+
+{/* <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* User Profile Card */}
           <Card className="bg-gradient-to-br from-white to-indigo-50/30 border-0 shadow-lg">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-center gap-4 lg:gap-0 lg:justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <UserIcon className="h-4 w-4 text-indigo-600" />
                   Profile Information
@@ -304,7 +623,6 @@ export function ProfilePage() {
                   size="sm"
                   onClick={() => {
                     if (!isEditing) {
-                      // Going from view → edit mode: populate editForm
                       setEditForm({
                         firstName: firstName || "",
                         lastName: lastName || "",
@@ -399,27 +717,9 @@ export function ProfilePage() {
                 </div>
               </div>
 
-              {/* {!isEditing && (
-                <>
-                  <Separator />
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {stats.map((stat, index) => (
-                      <div key={index} className="text-center">
-                        <div className={`text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
-                          {stat.value}
-                        </div>
-                        <div className="text-sm text-muted-foreground">{stat.label}</div>
-                        <div className="text-xs text-green-600">{stat.change}</div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )} */}
             </CardContent>
           </Card>
 
-          {/* Connected Platforms */}
           <Card className="bg-gradient-to-br from-white to-blue-50/30 border-0 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -508,9 +808,7 @@ export function ProfilePage() {
           </Card>
         </div>
 
-        {/* Settings Sidebar */}
         <div className="space-y-6">
-          {/* Account Settings */}
           <Card className="bg-gradient-to-br from-white to-green-50/30 border-0 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -520,20 +818,6 @@ export function ProfilePage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                {/* <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label className="font-medium">Auto-post to LinkedIn</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Automatically publish scheduled posts
-                    </p>
-                  </div>
-                  <Switch
-                    checked={autoPostEnabled}
-                    onCheckedChange={setAutoPostEnabled}
-                  />
-                </div> */}
-
-                {/* <Separator /> */}
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
@@ -551,7 +835,6 @@ export function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Subscription Status */}
           <Card className="bg-gradient-to-br from-white to-yellow-50/30 border-0 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -592,32 +875,6 @@ export function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Notification Settings */}
-          {/* <Card className="bg-gradient-to-br from-white to-purple-50/30 border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-purple-600" />
-                Notification Preferences
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                {[
-                  { label: "Post published", enabled: true },
-                  { label: "High engagement alert", enabled: true },
-                  { label: "Weekly summary", enabled: false },
-                  { label: "New features", enabled: true }
-                ].map((setting, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm">{setting.label}</span>
-                    <Switch defaultChecked={setting.enabled} size="sm" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card> */}
-
-          {/* Security & Logout */}
           <Card className="bg-gradient-to-br from-white to-red-50/30 border-0 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -631,10 +888,7 @@ export function ProfilePage() {
                   <Settings className="h-4 w-4" />
                   Change Password
                 </Button>
-                {/* <Button variant="outline" className="w-full gap-2">
-                  <Shield className="h-4 w-4" />
-                  Two-Factor Auth
-                </Button> */}
+                
                 <Separator />
                 <Button
                   variant="outline"
@@ -648,9 +902,4 @@ export function ProfilePage() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
-  );
-}
-
-export default ProfilePage;
+      </div> */}

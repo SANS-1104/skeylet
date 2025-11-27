@@ -769,7 +769,7 @@ useEffect(() => {
                   }}
                   className="min-h-48 resize-none text-2xl"
                 />
-                <div className="flex justify-between text-sm text-muted-foreground">
+                <div className="flex flex-wrap gap-2 justify-between text-sm text-muted-foreground">
                   <span>{content.length} characters</span>
                   <span>
                     Recommended: 150-300 characters for optimal engagement
@@ -779,10 +779,10 @@ useEffect(() => {
 
               {/* Language & Tone */}
               <div className="flex flex-row flex-wrap gap-8 mt-4">
-                <div className="space-y-2">
+                <div className="space-y-2 w-full lg:w-48">
                   <Label htmlFor="language">Language</Label>
                   <Select value={language} onValueChange={setLanguage}>
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-full lg:w-48">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -794,10 +794,10 @@ useEffect(() => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 w-full lg:w-48">
                   <Label htmlFor="tone">Tone</Label>
                   <Select value={tone} onValueChange={setTone}>
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-full lg:w-48">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -810,10 +810,10 @@ useEffect(() => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="w-full lg:w-48">
                   <Label htmlFor="selectTopic">Topic</Label>
                   <Select value={selectTopic} onValueChange={setSelectTopic}>
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-full lg:w-48">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -827,7 +827,7 @@ useEffect(() => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="w-full lg:w-48">
                   <Label htmlFor="wordCount">Word Count</Label>
                   <Input
                     id="wordCount"
