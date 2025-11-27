@@ -1,6 +1,7 @@
 import express from "express";
 import axios from "axios";
 import crypto from "crypto";
+import FormData from "form-data";
 
 const router = express.Router();
 
@@ -61,6 +62,7 @@ function decryptVariantPayResponse(resp) {
  * 👉 LEG 1: Create Payment Link
  * ======================================================
  */
+
 router.post("/create-payment", async (req, res) => {
   try {
     const { amount, name, mobile } = req.body;
@@ -84,21 +86,26 @@ router.post("/create-payment", async (req, res) => {
       purpose_message: "Skeylet Subscription"
     };
 
+    // Encrypt the payload
     const encrypted = encryptPayload(payloadData);
 
-    const gatewayRes = await axios.post(
-      VARIANT_URL,
-      { payload: encrypted.payload, iv: encrypted.iv },
-      {
-        headers: {
-          "client-id": CLIENT_ID,
-          "fps3-api-key": API_KEY,
-          "client-secret": CLIENT_SECRET,
-          "service-secret": SERVICE_SECRET,
-        },
-      }
-    );
+    // Create multipart/form-data request
+    const form = new FormData();
+    form.append("payload", encrypted.payload);
+    form.append("iv", encrypted.iv);
 
+    // Send request to VariantPay
+    const gatewayRes = await axios.post(VARIANT_URL, form, {
+      headers: {
+        ...form.getHeaders(), // crucial for multipart/form-data
+        "client-id": CLIENT_ID,
+        "fps3-api-key": API_KEY,
+        "client-secret": CLIENT_SECRET,
+        "service-secret": SERVICE_SECRET,
+      },
+    });
+
+    // Decrypt the response
     const decrypted = decryptVariantPayResponse(gatewayRes.data);
 
     if (decrypted.status !== "SUCCESS") {
