@@ -465,7 +465,7 @@ export function ProfilePage() {
                 </div>
               </div>
 
-              <div className="flex gap-2 w-full md:w-auto">
+              <div className="flex flex-wrap gap-2 w-full md:w-auto">
                 {platform.connected ? (
                   <>
                     <Button
