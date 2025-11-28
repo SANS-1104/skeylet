@@ -519,11 +519,8 @@ router.post("/create-payment", async (req, res) => {
     console.log("DECRYPTED RESPONSE:", decrypted);
 
     // Handle failure
-    if (decrypted.status !== "SUCCESS") {
-      return res.status(400).json({
-        success: false,
-        message: decrypted.message || "Payment failed",
-      });
+    if (!decrypted.paymentLink?.linkUrl) {
+      return res.status(400).json({ success: false, message: "No payment link returned" });
     }
 
     // Success
@@ -531,7 +528,12 @@ router.post("/create-payment", async (req, res) => {
       return res.status(400).json({ success: false, message: "No payment link returned" });
     }
 
-    return res.redirect(decrypted.paymentLink.linkUrl);
+    // Instead of res.redirect(...)
+    return res.json({
+      success: true,
+      paymentLink: decrypted.paymentLink.linkUrl
+    });
+
 
   } catch (err) {
     console.error("VariantPay error:", err.response?.data || err.message);
