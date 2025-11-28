@@ -533,7 +533,8 @@ router.post("/create-payment", async (req, res) => {
       success: true,
       paymentLink: decrypted.paymentLink.linkUrl
     });
-
+    console.log(decrypted)
+    console.log(paymentLink)
 
   } catch (err) {
     console.error("VariantPay error:", err.response?.data || err.message);
