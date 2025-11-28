@@ -133,14 +133,26 @@ export function CheckoutPage() {
       mobile: contactInfo.mobile,
     });
 
-    if (!data.success) {
-      toast.error(data.message);
+    // Check if backend returned success
+    if (!data?.success) {
+      // Show message from backend if available
+      toast.error(data?.message || "Payment initiation failed");
       return;
     }
 
+    // Check if payment link exists
+    if (!data?.paymentLink) {
+      toast.error("No payment link received. Try again.");
+      return;
+    }
+
+    // Redirect to VariantPay checkout
     window.location.href = data.paymentLink;
+
   } catch (err) {
-    toast.error("Payment failed");
+    // Show backend error if available
+    const msg = err.response?.data?.message || err.message || "Payment failed";
+    toast.error(msg);
   } finally {
     setLoading(false);
   }
