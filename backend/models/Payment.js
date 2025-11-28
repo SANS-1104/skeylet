@@ -8,6 +8,7 @@ const PaymentSchema = new Schema({
   currency: { type: String, default: "USD" },
   status: { type: String, enum: ["none","pending", "active"], default: "none" },
   method: { type: String, enum: ["variantpay","razorpay","stripe", "paypal"], default: "variantpay" },
+  referenceId: { type: String, required: true, unique: true },
   PaymentId: { type: String },
   validUntil: { type: Date }, 
   createdAt: { type: Date, default: Date.now },
