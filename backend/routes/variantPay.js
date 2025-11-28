@@ -210,5 +210,42 @@ router.post("/webhook", async (req, res) => {
   }
 });
 
+/* ======================================================
+ * 👉 LEG 4: SECURE FRONTEND VERIFICATION
+ * Used by the frontend (PaymentStatusPage) to confirm
+ * the status after the webhook has updated the database.
+ * ======================================================
+ */
+router.post("/verify-variantpay-txn", async (req, res) => {
+  try {
+    const { sanTxnId } = req.body;
+
+    if (!sanTxnId) {
+      return res.status(400).json({ success: false, message: "Missing transaction ID" });
+    }
+    
+    // Placeholder logic for demonstration:
+    const finalStatus = "SUCCESS"; // Replace with paymentRecord.status
+    const isPlanActive = true;     // Replace with user.planActive
+
+    if (finalStatus === "SUCCESS" && isPlanActive) {
+      return res.json({
+        success: true,
+        status: "SUCCESS",
+        message: "Payment verified and subscription is active."
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      status: finalStatus,
+      message: "Transaction status is not successful or subscription is not active."
+    });
+
+  } catch (err) {
+    console.error("Verification endpoint error:", err);
+    return res.status(500).json({ success: false, message: "Internal server error during verification" });
+  }
+});
 
 export default router;

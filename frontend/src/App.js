@@ -15,6 +15,7 @@ import LP2HomePage from './STUDIO/LP2/LP2HomePage';
 import { PrivacyPolicy } from './STUDIO/LP2/PrivacyPolicy';
 import { RefundPolicy } from './STUDIO/LP2/RefundPolicy';
 import { TermsOfService } from './STUDIO/LP2/TermsOfService';
+import { PaymentStatusPage } from './STUDIO/LANDING-PAGE/PaymentStatusPage';
 
 function App() {
 
@@ -43,6 +44,7 @@ function App() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/login-success" element={<LoginSuccess />} />
+        <Route path="/payment-status" element={<PaymentStatusPage />} />
         <Route path="/dashboard/:name" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/studioSuperAdmin" element={<StudioSuperAdminDashboard />} />
       </Routes>

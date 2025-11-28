@@ -767,7 +767,7 @@ useEffect(() => {
                     setContent(e.target.value);
                     setGeneratedByAI(false); // user edited, so allow manual draft saving again
                   }}
-                  className="min-h-48 resize-none text-2xl"
+                  className="min-h-48 resize-none text-lg lg:text-2xl"
                 />
                 <div className="flex flex-wrap gap-2 justify-between text-sm text-muted-foreground">
                   <span>{content.length} characters</span>
