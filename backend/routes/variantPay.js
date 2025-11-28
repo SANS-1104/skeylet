@@ -527,11 +527,12 @@ router.post("/create-payment", async (req, res) => {
     }
 
     // Success
-    return res.json({
-      success: true,
-      referenceId: reference_id,
-      paymentLink: decrypted.paymentLink?.linkUrl,
-    });
+    if (!decrypted.paymentLink?.linkUrl) {
+      return res.status(400).json({ success: false, message: "No payment link returned" });
+    }
+
+    return res.redirect(decrypted.paymentLink.linkUrl);
+
   } catch (err) {
     console.error("VariantPay error:", err.response?.data || err.message);
     return res.status(500).json({
