@@ -65,53 +65,50 @@ function decryptVariantPayResponse(resp) {
 
 router.post("/create-payment", async (req, res) => {
   try {
-    const { amount, name, mobile, userId, planId, billingType } = req.body;
-    // ⚠️ NOTE: Assumes userId and planId are passed from the CheckoutPage
-    
-    // Use .trim() to fix key decryption issue (PGH003)
-    const SECRET_KEY_TRIMMED = SECRET_KEY.trim(); 
-    
-    // 1. Generate unique internal reference
+    const { amount, name, mobile } = req.body;
+
     const reference_id = "SKEYLET_" + Date.now();
 
-    // 2. Save PENDING payment record
-    const newPayment = await Payment.create({
-      user: userId, 
-      plan: planId,
-      amount: Number(amount),
-      currency: "INR",
-      status: "pending",
-      method: "variantpay",
-      referenceId: reference_id,
-      // We don't have sanTxnId yet, so leave PaymentId empty
-    });
-
-    // 3. Prepare Payload for VariantPay
     const payloadData = {
       reference_id,
       from_account: FROM_ACCOUNT,
       currency_code: "INR",
       transfer_amount: Number(amount).toFixed(2),
       transfer_type: "1",
-      // ... other card fields ...
-      purpose_message: `Skeylet Subscription (${billingType})`
+
+      // Hosted Page → card fields must stay empty
+      card_number: "4111111111111111",
+      card_expiry_month: "12",
+      card_expiry_year: "2030",
+      card_cvv: "123",
+      card_holder_name: name || "Test User",
+
+      purpose_message: "Skeylet Subscription"
     };
 
-    // 4. Encrypt and send to VariantPay
-    const encrypted = encryptPayload(payloadData); 
-    // ... (rest of axios call to VariantPay)
-    
+    // Encrypt the payload
+    const encrypted = encryptPayload(payloadData);
+
+    // Create multipart/form-data request
+    const form = new FormData();
+    form.append("payload", encrypted.payload);
+    form.append("iv", encrypted.iv);
+
+    // Send request to VariantPay
     const gatewayRes = await axios.post(VARIANT_URL, form, {
-      headers: { /* ... headers ... */ },
+      headers: {
+        ...form.getHeaders(), // crucial for multipart/form-data
+        "client-id": CLIENT_ID,
+        "fps3-api-key": API_KEY,
+        "client-secret": CLIENT_SECRET,
+        "service-secret": SERVICE_SECRET,
+      },
     });
 
+    // Decrypt the response
     const decrypted = decryptVariantPayResponse(gatewayRes.data);
 
     if (decrypted.status !== "SUCCESS") {
-      // Mark our payment as failed if gateway fails to initiate
-      newPayment.status = "failed";
-      await newPayment.save();
-      
       return res.status(400).json({
         success: false,
         message: decrypted.message,
@@ -126,7 +123,10 @@ router.post("/create-payment", async (req, res) => {
 
   } catch (err) {
     console.error("VariantPay error:", err.response?.data || err);
-    return res.status(500).json({ success: false, message: "Payment initiation failed" });
+    return res.status(500).json({
+      success: false,
+      message: "Payment initiation failed",
+    });
   }
 });
 
@@ -161,129 +161,54 @@ router.get("/callback", async (req, res) => {
  * Hit directly by VariantPay backend → must decrypt
  * ======================================================
  */
-
 router.post("/webhook", async (req, res) => {
   try {
     const { payload, iv } = req.body;
-    // ... (initial validation for payload/iv)
 
-    const decrypted = decryptVariantPayResponse({ payload, iv }); 
+    if (!payload || !iv) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing payload/iv"
+      });
+    }
+
+    const decrypted = decryptVariantPayResponse({ payload, iv });
+
     console.log("🔔 WEBHOOK RECEIVED:", decrypted);
 
     const {
       sanTxnId,
-      status, // The actual payment result from the bank/gateway
-      reference_id, // Our internal ID created in LEG 1
+      status,
+      message,
+      reference_id,
+      transfer_amount,
     } = decrypted;
 
-    // 1. Find the pending payment record using our internal reference ID
-    const paymentRecord = await Payment.findOne({ referenceId: reference_id });
+    if (status === "SUCCESS") {
+      console.log("💰 Payment SUCCESS:", sanTxnId);
 
-    if (!paymentRecord) {
-      // If the record isn't found, log an error but return success to the gateway to prevent retries.
-      console.error("❌ WEBHOOK ERROR: Payment record not found for reference:", reference_id);
-      return res.json({ success: true, message: "Payment record not found internally" });
-    }
+      // TODO: update your DB here
+      // await Payment.updateOne({ reference_id }, { status: "SUCCESS" });
 
-    // 2. Determine final status and update Payment record
-    const finalStatus = status === "SUCCESS" ? "active" : "failed";
-    paymentRecord.status = finalStatus;
-    paymentRecord.PaymentId = sanTxnId; // Store the gateway's ID
-    paymentRecord.updatedAt = Date.now();
-    await paymentRecord.save();
+      // TODO: enable subscription
+      // await User.updateOne({ userId }, { planActive: true });
 
-    // 3. Update User Subscription (ONLY on SUCCESS)
-    if (finalStatus === "active") {
-      console.log(`💰 Payment SUCCESS: Transaction ${sanTxnId} confirmed.`);
-      
-      const user = await User.findById(paymentRecord.user);
-      
-      if (user) {
-        // Calculate the next billing date (assuming a 1-year plan based on the Plan model)
-        const validUntilDate = new Date();
-        validUntilDate.setFullYear(validUntilDate.getFullYear() + 1); 
-        
-        // Update user fields to activate subscription
-        user.subscriptionPlan = paymentRecord.plan; 
-        // The User pre-save hook handles setting subscriptionStatus to 'active' and monthlyQuota.
-        await user.save(); 
-        
-        // Finalize payment record validUntil date
-        paymentRecord.validUntil = validUntilDate;
-        await paymentRecord.save();
-      }
     } else {
-      console.log(`❌ Payment FAILED: Transaction ${sanTxnId} failed.`);
+      console.log("❌ Payment FAILED:", sanTxnId, message);
+
+      // await Payment.updateOne({ reference_id }, { status: "FAILED" });
     }
 
-    // Always respond with success to the webhook to acknowledge receipt
     return res.json({ success: true });
 
   } catch (err) {
     console.error("Webhook ERROR:", err);
-    return res.status(500).json({ success: false, message: "Webhook processing failed" });
-  }
-});
-
-
-/* ======================================================
- * 👉 LEG 4: SECURE FRONTEND VERIFICATION (UPDATED)
- * Used by the frontend (PaymentStatusPage) to confirm
- * the status after the webhook has updated the database.
- * ======================================================
- */
-router.post("/verify-variantpay-txn", async (req, res) => {
-  try {
-    const { sanTxnId } = req.body;
-
-    if (!sanTxnId) {
-      return res.status(400).json({ success: false, message: "Missing transaction ID" });
-    }
-    
-    // 1. Find the related payment record using the gateway's ID (sanTxnId)
-    const paymentRecord = await Payment.findOne({ PaymentId: sanTxnId });
-    
-    if (!paymentRecord) {
-      // If no record found, the webhook hasn't arrived yet (still PENDING/PROCESSING)
-      return res.status(400).json({ 
-        success: false, 
-        status: "PENDING", 
-        message: "Transaction verification pending. Please check dashboard in a moment." 
-      });
-    }
-
-    // 2. Find the associated User and populate the Plan name
-    const user = await User.findById(paymentRecord.user).populate('subscriptionPlan'); 
-    
-    // 3. Check the definitive status from our source of truth
-    if (paymentRecord.status === "active" && user?.subscriptionStatus === "active") {
-      return res.json({
-        success: true,
-        status: "SUCCESS",
-        message: "Payment verified and subscription is active.",
-        // Return plan name and billing date to the frontend
-        plan: user.subscriptionPlan.name, 
-        nextBillingDate: user.nextBillingDate,
-      });
-    }
-
-    // 4. Handle non-successful status
-    const statusFromDB = paymentRecord.status.toUpperCase();
-    
-    return res.status(400).json({
+    return res.status(500).json({
       success: false,
-      status: statusFromDB,
-      message: statusFromDB === "FAILED" ? 
-        "Payment failed. Please try again." : 
-        "Transaction is not yet marked active in our system."
+      message: "Webhook processing failed"
     });
-
-  } catch (err) {
-    console.error("Verification endpoint error:", err);
-    return res.status(500).json({ success: false, message: "Internal server error during verification" });
   }
 });
-
 
 
 export default router;
