@@ -367,10 +367,7 @@ import express from "express";
 import axios from "axios";
 import crypto from "crypto";
 import FormData from "form-data";
-import crypto from "crypto";
-import User from "../models/User";
-import Payment from "../models/Payment";
-import Plan from "../models/Plan";
+
 
 
 
@@ -519,7 +516,7 @@ router.post("/create-payment", async (req, res) => {
     // Decrypt response
     const decrypted = decryptAES(resp.payload, resp.iv, secretKey);
 
-    console.log("DECRYPTED RESPONSE:", decryptedJson);
+    console.log("DECRYPTED RESPONSE:", decrypted);
 
     // Handle failure
     if (decrypted.status !== "SUCCESS") {
