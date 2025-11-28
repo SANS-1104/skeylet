@@ -363,20 +363,200 @@
 
 
 
+// import express from "express";
+// import axios from "axios";
+// import crypto from "crypto";
+// import FormData from "form-data";
+
+
+
+
+// const router = express.Router();
+
+// // ---------------------- VariantPay Config ----------------------
+// const apiUrl =
+//   process.env.VARIANTPAY_API_ENDPOINT ||
+//   "https://payments.variantpay.com/cbs/ccs/initiate";
+
+// const headers = {
+//   "client-id": process.env.VARIANTPAY_CLIENT_ID,
+//   "fps3-api-key": process.env.VARIANTPAY_API_KEY,
+//   "client-secret": process.env.VARIANTPAY_CLIENT_SECRET,
+//   "service-secret": process.env.VARIANTPAY_SERVICE_SECRET,
+//   "Content-Type": "application/json",
+// };
+
+// const secretKey = process.env.VARIANTPAY_SECRET_KEY;
+
+// function encryptAES_PHP_STYLE(data, key) {
+//   // iv: 16 raw bytes
+//   const iv = crypto.randomBytes(16);
+
+//   // Create cipher; ask for base64 output (this gives "base64-text" like PHP's openssl_encrypt default)
+//   const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(key, "utf8"), iv);
+//   let encryptedBase64Text = cipher.update(JSON.stringify(data), "utf8", "base64");
+//   encryptedBase64Text += cipher.final("base64");
+
+//   // Double-base64 in PHP means base64-encoding the ASCII base64 text bytes.
+//   // So we encode the base64 text as UTF-8 bytes and base64 those bytes.
+//   const doubleBase64Payload = Buffer.from(encryptedBase64Text, "utf8").toString("base64");
+
+//   return {
+//     payload: doubleBase64Payload,
+//     iv: iv.toString("base64")
+//   };
+// }
+
+// /**
+//  * decryptAES (robust)
+//  * - Tries single base64 decode + decrypt (most common)
+//  * - If that fails, tries double base64 decode (handles PHP double-base64 responses)
+//  *
+//  * Returns decrypted JSON string (caller should JSON.parse it).
+//  */
+// function decryptAES(payloadB64, ivB64, key) {
+//   if (!payloadB64 || !ivB64) {
+//     throw new Error("Missing payload or iv");
+//   }
+
+//   const iv = Buffer.from(ivB64, "base64");
+//   if (iv.length !== 16) {
+//     throw new Error("Invalid IV length: " + iv.length);
+//   }
+
+//   // helper to attempt decrypting a Buffer of raw cipher bytes
+//   function attemptDecrypt(rawBuffer) {
+//     try {
+//       const decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(key, "utf8"), iv);
+//       const out = Buffer.concat([decipher.update(rawBuffer), decipher.final()]);
+//       return out.toString("utf8");
+//     } catch (e) {
+//       return false;
+//     }
+//   }
+
+//   // 1) Single decode attempt (payload is base64 of raw cipher bytes)
+//   try {
+//     const singleDecoded = Buffer.from(payloadB64, "base64"); // yields raw bytes OR yields the "base64-text" bytes (if double encoded)
+//     let res = attemptDecrypt(singleDecoded);
+//     if (res !== false) return res;
+
+//     // 2) Double-decode attempt:
+//     // If singleDecoded actually contains ASCII base64 text (because server double-encoded),
+//     // convert to string and base64-decode that text to raw cipher bytes, then decrypt.
+//     const asText = singleDecoded.toString("utf8");
+//     // safety: ensure it looks like base64 (basic check)
+//     if (/^[A-Za-z0-9+/= \r\n\t]+$/.test(asText)) {
+//       try {
+//         const doubleDecoded = Buffer.from(asText, "base64");
+//         res = attemptDecrypt(doubleDecoded);
+//         if (res !== false) return res;
+//       } catch (e) {
+//         // fallthrough to error
+//       }
+//     }
+//   } catch (e) {
+//     // fall through to throw below
+//   }
+
+//   throw new Error("Decryption failed (invalid key/iv or wrong payload encoding)");
+// }
+
+// // ===================================================================
+// //                     🚀 CREATE PAYMENT API
+// // ===================================================================
+
+// router.post("/create-payment", async (req, res) => {
+//   try {
+//     const { amount, name, mobile } = req.body;
+
+//     const reference_id = "SKEYLET_" + Date.now();
+
+//     // -------- Dummy test card payload --------
+//     const payloadData = {
+//       reference_id,
+//       from_account: process.env.VARIANTPAY_FROM_ACCOUNT,
+//       currency_code: "INR",
+//       transfer_amount: Number(amount).toFixed(2),
+//       transfer_type: "1",
+
+//       // Dummy Card
+//       card_number: "4375518860306023",
+//       card_expiry_month: "12",
+//       card_expiry_year: "27",
+//       card_cvv: "359",
+//       card_holder_name: name || "Test User",
+
+//       purpose_message: "Payment test",
+//     };
+
+//     // Encrypt payload
+//     const encrypted = encryptAES_PHP_STYLE(payloadData, secretKey);
+
+//     // Prepare form-data
+//     const form = new FormData();
+//     form.append("payload", encrypted.payload);
+//     form.append("iv", encrypted.iv);
+
+//     // Send request to VariantPay
+//     const gatewayRes = await axios.post(apiUrl, encrypted, {
+//       headers: headers,
+//       timeout: 15000
+//     });
+
+//     const resp = gatewayRes.data;
+
+//     if (!resp.payload || !resp.iv) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid response from VariantPay",
+//       });
+//     }
+
+//     // Decrypt response
+//     const decrypted = decryptAES(resp.payload, resp.iv, secretKey);
+
+//     console.log("DECRYPTED RESPONSE:", decrypted);
+
+//     // Handle failure
+//     if (!decrypted.paymentLink?.linkUrl) {
+//       return res.status(400).json({ success: false, message: "No payment link returned" });
+//     }
+
+//     // Success
+//     if (!decrypted.paymentLink?.linkUrl) {
+//       return res.status(400).json({ success: false, message: "No payment link returned" });
+//     }
+
+//     // Instead of res.redirect(...)
+//     return res.json({
+//       success: true,
+//       paymentLink: decrypted.paymentLink.linkUrl
+//     });
+//     console.log(decrypted)
+//     console.log(paymentLink)
+
+//   } catch (err) {
+//     console.error("VariantPay error:", err.response?.data || err.message);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Payment initiation failed",
+//     });
+//   }
+// });
+
+// export default router;
+
+
 import express from "express";
 import axios from "axios";
 import crypto from "crypto";
 import FormData from "form-data";
 
-
-
-
 const router = express.Router();
 
 // ---------------------- VariantPay Config ----------------------
-const apiUrl =
-  process.env.VARIANTPAY_API_ENDPOINT ||
-  "https://payments.variantpay.com/cbs/ccs/initiate";
+const apiUrl = process.env.VARIANTPAY_API_ENDPOINT || "https://payments.variantpay.com/cbs/ccs/initiate";
 
 const headers = {
   "client-id": process.env.VARIANTPAY_CLIENT_ID,
@@ -388,17 +568,15 @@ const headers = {
 
 const secretKey = process.env.VARIANTPAY_SECRET_KEY;
 
+// ---------------------- AES Encrypt/Decrypt ----------------------
 function encryptAES_PHP_STYLE(data, key) {
-  // iv: 16 raw bytes
   const iv = crypto.randomBytes(16);
-
-  // Create cipher; ask for base64 output (this gives "base64-text" like PHP's openssl_encrypt default)
   const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(key, "utf8"), iv);
+
   let encryptedBase64Text = cipher.update(JSON.stringify(data), "utf8", "base64");
   encryptedBase64Text += cipher.final("base64");
 
-  // Double-base64 in PHP means base64-encoding the ASCII base64 text bytes.
-  // So we encode the base64 text as UTF-8 bytes and base64 those bytes.
+  // Double-base64 like PHP
   const doubleBase64Payload = Buffer.from(encryptedBase64Text, "utf8").toString("base64");
 
   return {
@@ -407,25 +585,13 @@ function encryptAES_PHP_STYLE(data, key) {
   };
 }
 
-/**
- * decryptAES (robust)
- * - Tries single base64 decode + decrypt (most common)
- * - If that fails, tries double base64 decode (handles PHP double-base64 responses)
- *
- * Returns decrypted JSON string (caller should JSON.parse it).
- */
 function decryptAES(payloadB64, ivB64, key) {
-  if (!payloadB64 || !ivB64) {
-    throw new Error("Missing payload or iv");
-  }
+  if (!payloadB64 || !ivB64) throw new Error("Missing payload or iv");
 
   const iv = Buffer.from(ivB64, "base64");
-  if (iv.length !== 16) {
-    throw new Error("Invalid IV length: " + iv.length);
-  }
+  if (iv.length !== 16) throw new Error("Invalid IV length");
 
-  // helper to attempt decrypting a Buffer of raw cipher bytes
-  function attemptDecrypt(rawBuffer) {
+  const attemptDecrypt = (rawBuffer) => {
     try {
       const decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(key, "utf8"), iv);
       const out = Buffer.concat([decipher.update(rawBuffer), decipher.final()]);
@@ -433,114 +599,88 @@ function decryptAES(payloadB64, ivB64, key) {
     } catch (e) {
       return false;
     }
-  }
+  };
 
-  // 1) Single decode attempt (payload is base64 of raw cipher bytes)
-  try {
-    const singleDecoded = Buffer.from(payloadB64, "base64"); // yields raw bytes OR yields the "base64-text" bytes (if double encoded)
-    let res = attemptDecrypt(singleDecoded);
-    if (res !== false) return res;
+  // Single decode
+  const singleDecoded = Buffer.from(payloadB64, "base64");
+  let res = attemptDecrypt(singleDecoded);
+  if (res !== false) return res;
 
-    // 2) Double-decode attempt:
-    // If singleDecoded actually contains ASCII base64 text (because server double-encoded),
-    // convert to string and base64-decode that text to raw cipher bytes, then decrypt.
-    const asText = singleDecoded.toString("utf8");
-    // safety: ensure it looks like base64 (basic check)
-    if (/^[A-Za-z0-9+/= \r\n\t]+$/.test(asText)) {
-      try {
-        const doubleDecoded = Buffer.from(asText, "base64");
-        res = attemptDecrypt(doubleDecoded);
-        if (res !== false) return res;
-      } catch (e) {
-        // fallthrough to error
-      }
-    }
-  } catch (e) {
-    // fall through to throw below
+  // Double decode (in case VariantPay double-encodes)
+  const asText = singleDecoded.toString("utf8");
+  if (/^[A-Za-z0-9+/= \r\n\t]+$/.test(asText)) {
+    try {
+      const doubleDecoded = Buffer.from(asText, "base64");
+      res = attemptDecrypt(doubleDecoded);
+      if (res !== false) return res;
+    } catch {}
   }
 
   throw new Error("Decryption failed (invalid key/iv or wrong payload encoding)");
 }
 
-// ===================================================================
-//                     🚀 CREATE PAYMENT API
-// ===================================================================
-
+// ---------------------- CREATE PAYMENT ----------------------
 router.post("/create-payment", async (req, res) => {
   try {
     const { amount, name, mobile } = req.body;
-
     const reference_id = "SKEYLET_" + Date.now();
 
-    // -------- Dummy test card payload --------
+    // Dummy card payload
     const payloadData = {
       reference_id,
       from_account: process.env.VARIANTPAY_FROM_ACCOUNT,
       currency_code: "INR",
       transfer_amount: Number(amount).toFixed(2),
       transfer_type: "1",
-
-      // Dummy Card
       card_number: "4375518860306023",
       card_expiry_month: "12",
       card_expiry_year: "27",
       card_cvv: "359",
       card_holder_name: name || "Test User",
-
       purpose_message: "Payment test",
     };
 
-    // Encrypt payload
     const encrypted = encryptAES_PHP_STYLE(payloadData, secretKey);
 
-    // Prepare form-data
-    const form = new FormData();
-    form.append("payload", encrypted.payload);
-    form.append("iv", encrypted.iv);
-
-    // Send request to VariantPay
+    // Send request
     const gatewayRes = await axios.post(apiUrl, encrypted, {
-      headers: headers,
-      timeout: 15000
+      headers,
+      timeout: 15000,
     });
 
     const resp = gatewayRes.data;
 
     if (!resp.payload || !resp.iv) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid response from VariantPay",
-      });
+      return res.status(400).json({ success: false, message: "Invalid response from VariantPay" });
     }
 
     // Decrypt response
-    const decrypted = decryptAES(resp.payload, resp.iv, secretKey);
-
+    const decrypted = JSON.parse(decryptAES(resp.payload, resp.iv, secretKey));
     console.log("DECRYPTED RESPONSE:", decrypted);
 
-    // Handle failure
-    if (!decrypted.paymentLink?.linkUrl) {
+    // Extract payment link safely
+    let paymentLink = null;
+    if (typeof decrypted.paymentLink === "string") {
+      paymentLink = decrypted.paymentLink;
+    } else if (decrypted.paymentLink?.linkUrl) {
+      paymentLink = decrypted.paymentLink.linkUrl;
+    }
+
+    if (!paymentLink) {
       return res.status(400).json({ success: false, message: "No payment link returned" });
     }
 
-    // Success
-    if (!decrypted.paymentLink?.linkUrl) {
-      return res.status(400).json({ success: false, message: "No payment link returned" });
-    }
-
-    // Instead of res.redirect(...)
+    // Return payment link to frontend
     return res.json({
       success: true,
-      paymentLink: decrypted.paymentLink.linkUrl
+      paymentLink,
     });
-    console.log(decrypted)
-    console.log(paymentLink)
 
   } catch (err) {
     console.error("VariantPay error:", err.response?.data || err.message);
     return res.status(500).json({
       success: false,
-      message: "Payment initiation failed",
+      message: err.response?.data?.message || "Payment initiation failed",
     });
   }
 });
