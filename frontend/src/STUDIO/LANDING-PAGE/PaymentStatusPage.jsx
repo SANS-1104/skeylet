@@ -24,26 +24,28 @@ export function PaymentStatusPage() {
   const [verificationError, setVerificationError] = useState(null);
 
   // Get user info for dashboard redirect path
-  const { profile, isLoggedIn } = useContext(AuthContext); 
-  const userName = profile?.name; 
+  const { profile, isLoggedIn } = useContext(AuthContext);
+  const userName = profile?.name;
+  const storedReferenceId = localStorage.getItem("variantPayReferenceId");
 
   useEffect(() => {
-    if (!sanTxnId) {
-      setPaymentStatus("FAILED"); 
-      setVerificationError("Missing transaction ID.");
+    if (!sanTxnId || !storedReferenceId) {
+      setPaymentStatus("FAILED"); //
+      setVerificationError("Missing transaction ID or internal reference ID."); //
+      toast.error("Could not verify payment due to missing identifiers."); //
       return;
     }
-
     // --- Backend Verification (Crucial for Security) ---
     // This call checks the database to confirm the server-to-server webhook (LEG 3) 
     // was received, ensuring the payment is truly confirmed and the subscription is active.
     const verifyStatus = async () => {
       try {
         setPaymentStatus("VERIFYING");
-        
+
         // This is a placeholder for the final verification endpoint 
         const res = await axiosClient.post("/payments/callback", { 
-          sanTxnId 
+          sanTxnId,
+          referenceId: storedReferenceId,
         });
 
         const finalStatus = res.data.status.toUpperCase();
@@ -52,17 +54,20 @@ export function PaymentStatusPage() {
         if (finalStatus === "SUCCESS") {
            toast.success("Payment confirmed! Your plan is now active. Redirecting to home...", { autoClose: 3000 });
            // 🚀 NEW: Auto-redirect to the homepage as requested
-           localStorage.removeItem("selectedPlan"); 
+           localStorage.removeItem("selectedPlan");
+           localStorage.removeItem("variantPayReferenceId");
            setTimeout(() => {
                navigate("/", { replace: true }); 
            }, 2000); // Give the user time to see the success toast
         } else if (finalStatus === "FAILED" || finalStatus === "CANCELLED") {
            toast.error("Payment was not successful.");
+           localStorage.removeItem("variantPayReferenceId");
         }
 
       } catch (err) {
         console.error("Verification failed:", err);
         // Fallback: If verification API fails, use the URL status as a temporary display
+        localStorage.removeItem("variantPayReferenceId");
         setPaymentStatus(urlStatus.toUpperCase() === "SUCCESS" ? "SUCCESS" : "FAILED"); 
         setVerificationError(err.response?.data?.message || "Could not complete final verification.");
         toast.error("An error occurred during payment verification.");
@@ -71,7 +76,7 @@ export function PaymentStatusPage() {
     
     verifyStatus();
     
-  }, [sanTxnId, urlStatus]);
+  }, [sanTxnId, urlStatus, storedReferenceId]);
 
   
   const getStatusContent = () => {

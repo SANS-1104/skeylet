@@ -146,6 +146,7 @@ router.post("/create-payment", async (req, res) => {
     return res.json({
       success: true,
       paymentLink,
+      referenceId: reference_id,
     });
 
   } catch (err) {
@@ -159,61 +160,55 @@ router.post("/create-payment", async (req, res) => {
 
 // ---------------------- VERIFY PAYMENT (Final Step) ----------------------
 router.post("/callback", async (req, res) => {
-    const { sanTxnId } = req.body; // VariantPay Transaction ID from return URL
+    const { sanTxnId, referenceId } = req.body; 
 
-    if (!sanTxnId) {
-        return res.status(400).json({ status: "FAILED", message: "Missing VariantPay Transaction ID (sanTxnId)." });
+    if (!sanTxnId || !referenceId) {
+        // Fail if either ID is missing
+        return res.status(400).json({ status: "FAILED", message: "Missing VariantPay Transaction ID (sanTxnId) or internal referenceId." });
     }
 
     try {
-        // 1. Check if the payment has already been processed (e.g., via a webhook or previous call)
-        let payment = await Payment.findOne({ PaymentId: sanTxnId });
+        // 1. Find the unique payment using our internal referenceId (secure lookup)
+        let payment = await Payment.findOne({ referenceId });
         
-        if (payment && payment.status === "active") {
+        if (!payment) {
+             return res.status(404).json({ status: "FAILED", message: "No payment record found with that reference ID." });
+        }
+        
+        if (payment.status === "active") {
              return res.json({ status: "SUCCESS", message: "Transaction already processed." });
         }
         
-        // 2. Find the *most recent* pending payment for *any* user that we need to finalize.
-        // In a real application, you would use VariantPay's API to verify the status 
-        // using `sanTxnId` and retrieve the original `referenceId` for a secure lookup.
-        if (!payment) {
-            payment = await Payment.findOne({ status: "pending", method: "variantpay" })
-                .sort({ createdAt: -1 });
-
-            if (!payment) {
-                return res.status(404).json({ status: "FAILED", message: "No pending payment found to verify. Payment might have failed or been processed already." });
-            }
-        }
-
-        // 3. Update Payment record to active
-        payment.status = "active";
-        payment.PaymentId = sanTxnId; // Store the VariantPay transaction ID
-        payment.updatedAt = new Date();
+        // 2. Update Payment record to active
+        payment.status = "active"; //
+        payment.PaymentId = sanTxnId; //
+        payment.updatedAt = new Date(); //
         
         // Calculate next billing date (30 days)
-        const nextBillingDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-        payment.validUntil = nextBillingDate;
-        await payment.save();
+        const nextBillingDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); //
+        payment.validUntil = nextBillingDate; //
+        await payment.save(); //
 
-        // 4. Update User subscription
-        const user = await User.findById(payment.user);
+        // 3. Update User subscription
+        const user = await User.findById(payment.user); //
         if (!user) {
             console.error(`User with ID ${payment.user} not found during payment verification.`);
-            return res.status(500).json({ status: "FAILED", message: "User not found for subscription update." });
+            // Return partial success so the user sees the payment went through
+            return res.status(200).json({ status: "SUCCESS_PARTIAL", message: "Payment recorded, but user subscription update failed." });
         }
         
-        // This modification triggers the pre('save') hook in models/User.js to set quota, status, etc.
-        user.subscriptionPlan = payment.plan;
-        user.nextBillingDate = nextBillingDate; 
-        user.subscriptionStatus = "active"; 
-        await user.save();
+        // This triggers the pre('save') hook in models/User.js to set quota and status
+        user.subscriptionPlan = payment.plan; //
+        user.nextBillingDate = nextBillingDate; //
+        user.subscriptionStatus = "active"; //
+        await user.save(); //
         
-        // 5. Success response
-        return res.json({ status: "SUCCESS", message: "Payment verified and subscription activated." });
+        // 4. Success response
+        return res.json({ status: "SUCCESS", message: "Payment verified and subscription activated." }); //
 
     } catch (err) {
-        console.error("VariantPay verification error:", err);
-        return res.status(500).json({ status: "FAILED", message: "An error occurred during final verification." });
+        console.error("VariantPay verification error:", err); //
+        return res.status(500).json({ status: "FAILED", message: "An error occurred during final verification." }); //
     }
 });
 

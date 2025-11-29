@@ -183,10 +183,12 @@ export function CheckoutPage() {
     }
 
     // Check if payment link exists
-    if (!data?.paymentLink) {
-      toast.error("No payment link received. Try again.");
+    if (!data?.paymentLink || !data?.referenceId) { 
+      toast.error("Missing payment link or reference ID. Try again.");
       return;
     }
+    
+    localStorage.setItem("variantPayReferenceId", data.referenceId);
 
     // Redirect to VariantPay checkout
     window.location.href = data.paymentLink;
