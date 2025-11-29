@@ -123,7 +123,46 @@ export function CheckoutPage() {
   // };
 
   // variantpay logic
+//   const handlePayment = async () => {
+//   try {
+//     setLoading(true);
+
+//     const { data } = await axiosClient.post("/payments/create-payment", {
+//       amount: plan.selectedPrice,
+//       name: contactInfo.name,
+//       mobile: contactInfo.mobile,
+//     });
+
+//     // Check if backend returned success
+//     if (!data?.success) {
+//       // Show message from backend if available
+//       toast.error(data?.message || "Payment initiation failed");
+//       return;
+//     }
+
+//     // Check if payment link exists
+//     if (!data?.paymentLink) {
+//       toast.error("No payment link received. Try again.");
+//       return;
+//     }
+
+//     // Redirect to VariantPay checkout
+//     window.location.href = data.paymentLink;
+
+//   } catch (err) {
+//     // Show backend error if available
+//     const msg = err.response?.data?.message || err.message || "Payment failed";
+//     toast.error(msg);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
   const handlePayment = async () => {
+    if (!plan || !profile?._id || !plan._id) {
+      toast.error("User or plan data is missing. Please log in again.");
+      return;
+    }
   try {
     setLoading(true);
 
@@ -131,6 +170,9 @@ export function CheckoutPage() {
       amount: plan.selectedPrice,
       name: contactInfo.name,
       mobile: contactInfo.mobile,
+      userId: profile._id,
+      planId: plan._id,
+      billingType: plan.billingType,
     });
 
     // Check if backend returned success

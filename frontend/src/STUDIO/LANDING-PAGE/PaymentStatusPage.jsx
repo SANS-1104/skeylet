@@ -42,7 +42,7 @@ export function PaymentStatusPage() {
         setPaymentStatus("VERIFYING");
         
         // This is a placeholder for the final verification endpoint 
-        const res = await axiosClient.post("/payments/verify-variantpay-txn", { 
+        const res = await axiosClient.post("/payments/callback", { 
           sanTxnId 
         });
 
@@ -50,8 +50,12 @@ export function PaymentStatusPage() {
         setPaymentStatus(finalStatus);
 
         if (finalStatus === "SUCCESS") {
-           toast.success("Payment confirmed! Your plan is now active.");
-           // Optional: Redirect immediately, but showing status first is usually better UX.
+           toast.success("Payment confirmed! Your plan is now active. Redirecting to home...", { autoClose: 3000 });
+           // 🚀 NEW: Auto-redirect to the homepage as requested
+           localStorage.removeItem("selectedPlan"); 
+           setTimeout(() => {
+               navigate("/", { replace: true }); 
+           }, 2000); // Give the user time to see the success toast
         } else if (finalStatus === "FAILED" || finalStatus === "CANCELLED") {
            toast.error("Payment was not successful.");
         }
