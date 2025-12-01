@@ -171,7 +171,7 @@ router.post("/callback", async (req, res) => {
             status,
             responseCode,
             message,
-            cTxnId // VariantPay sends this, NOT referenceId
+            cTxnId
         } = req.body;
 
         if (!cTxnId || !sanTxnId) {
@@ -197,7 +197,8 @@ router.post("/callback", async (req, res) => {
         await payment.save();
 
         if (status !== "SUCCESS") {
-            return res.redirect("https://skeylet.com/payment-failed");
+            // return res.redirect("https://skeylet.com/payment-failed");
+            return res.status(200).send("Callback received. Payment failed.");
         }
 
         // Update user subscription
@@ -210,8 +211,8 @@ router.post("/callback", async (req, res) => {
         }
 
         // Redirect user to success page
-        return res.redirect("https://skeylet.com/payment-success");
-
+        // return res.redirect("https://skeylet.com/payment-success");
+        return res.status(200).send("Callback received and processed successfully.");
     } catch (err) {
         console.error("Callback Error:", err);
         return res.status(500).send("Server error");
