@@ -16,6 +16,9 @@ import { PrivacyPolicy } from './STUDIO/LP2/PrivacyPolicy';
 import { RefundPolicy } from './STUDIO/LP2/RefundPolicy';
 import { TermsOfService } from './STUDIO/LP2/TermsOfService';
 import { PaymentStatusPage } from './STUDIO/LANDING-PAGE/PaymentStatusPage';
+import PaymentSuccess from './STUDIO/LANDING-PAGE/PaymentSuccess';
+import PaymentFailed from './STUDIO/LANDING-PAGE/PaymentFailed';
+
 
 function App() {
 
