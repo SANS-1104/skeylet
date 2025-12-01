@@ -1,3 +1,5 @@
+// file: backend/routes/variantPay.js
+
 import express from "express";
 import axios from "axios";
 import crypto from "crypto";
@@ -162,56 +164,75 @@ router.post("/create-payment", async (req, res) => {
 
 // ---------------------- VERIFY PAYMENT (Final Step) ----------------------
 router.post("/callback", async (req, res) => {
-    const { sanTxnId, referenceId } = req.body; 
-
-    if (!sanTxnId || !referenceId) {
-        // Fail if either ID is missing
-        return res.status(400).json({ status: "FAILED", message: "Missing VariantPay Transaction ID (sanTxnId) or internal referenceId." });
-    }
-
     try {
-        // 1. Find the unique payment using our internal referenceId (secure lookup)
-        let payment = await Payment.findOne({ referenceId });
-        
-        if (!payment) {
-             return res.status(404).json({ status: "FAILED", message: "No payment record found with that reference ID." });
-        }
-        
-        if (payment.status === "active") {
-             return res.json({ status: "SUCCESS", message: "Transaction already processed." });
-        }
-        
-        // 2. Update Payment record to active
-        payment.status = "active"; //
-        payment.PaymentId = sanTxnId; //
-        payment.updatedAt = new Date(); //
-        
-        // Calculate next billing date (30 days)
-        const nextBillingDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); //
-        payment.validUntil = nextBillingDate; //
-        await payment.save(); //
+        console.log("VariantPay Callback Received:", req.body);
 
-        // 3. Update User subscription
-        const user = await User.findById(payment.user); //
-        if (!user) {
-            console.error(`User with ID ${payment.user} not found during payment verification.`);
-            // Return partial success so the user sees the payment went through
-            return res.status(200).json({ status: "SUCCESS_PARTIAL", message: "Payment recorded, but user subscription update failed." });
+        const {
+            sanTxnId,
+            status,
+            responseCode,
+            message,
+            cTxnId // VariantPay sends this, NOT referenceId
+        } = req.body;
+
+        if (!cTxnId || !sanTxnId) {
+            return res.status(400).send("Missing required fields.");
         }
-        
-        // This triggers the pre('save') hook in models/User.js to set quota and status
-        user.subscriptionPlan = payment.plan; //
-        user.nextBillingDate = nextBillingDate; //
-        user.subscriptionStatus = "active"; //
-        await user.save(); //
-        
-        // 4. Success response
-        return res.json({ status: "SUCCESS", message: "Payment verified and subscription activated." }); //
+
+        // Find payment using cTxnId (reference_id)
+        const payment = await Payment.findOne({ referenceId: cTxnId });
+
+        if (!payment) {
+            return res.status(404).send("Payment record not found.");
+        }
+
+        if (payment.status === "active") {
+            return res.send("Already processed");
+        }
+
+        // Update payment
+        payment.status = status === "SUCCESS" ? "active" : "failed";
+        payment.PaymentId = sanTxnId;
+        payment.updatedAt = new Date();
+        payment.validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        await payment.save();
+
+        if (status !== "SUCCESS") {
+            return res.redirect("https://skeylet.com/payment-failed");
+        }
+
+        // Update user subscription
+        const user = await User.findById(payment.user);
+        if (user) {
+            user.subscriptionPlan = payment.plan;
+            user.nextBillingDate = payment.validUntil;
+            user.subscriptionStatus = "active";
+            await user.save();
+        }
+
+        // Redirect user to success page
+        return res.redirect("https://skeylet.com/payment-success");
 
     } catch (err) {
-        console.error("VariantPay verification error:", err); //
-        return res.status(500).json({ status: "FAILED", message: "An error occurred during final verification." }); //
+        console.error("Callback Error:", err);
+        return res.status(500).send("Server error");
     }
 });
+
+router.get("/status/:referenceId", async (req, res) => {
+  try {
+    const payment = await Payment.findOne({ referenceId: req.params.referenceId });
+
+    if (!payment) {
+      return res.json({ status: "not_found" });
+    }
+
+    return res.json({ status: payment.status });
+  } catch (err) {
+    console.error("Status check error:", err);
+    return res.status(500).json({ status: "error" });
+  }
+});
+
 
 export default router;
