@@ -84,8 +84,6 @@ router.post("/create-payment", async (req, res) => {
     if (!userId || !planId) {
         return res.status(400).json({ success: false, message: "Missing user or plan ID." });
     }
-    const CALLBACK_URL = `https://skeylet.com/payment-status`;
-
     // 🚀 NEW: Create a PENDING Payment record before calling gateway
     const newPayment = new Payment({
         user: userId,
@@ -111,7 +109,9 @@ router.post("/create-payment", async (req, res) => {
       card_cvv: "359",
       card_holder_name: name || "Test User",
       purpose_message: "Skeylet Subscription",
-      return_url: CALLBACK_URL,
+      receipt_url: "https://skeylet.com/payment-status",
+      callback_url: "https://api.skeylet.com/payments/callback",
+      return_url: "https://skeylet.com/payment-status",
     };
 
     const encrypted = encryptAES_PHP_STYLE(payloadData, secretKey);
@@ -164,9 +164,8 @@ router.post("/create-payment", async (req, res) => {
 
 // ---------------------- VERIFY PAYMENT (Final Step) ----------------------
 router.post("/callback", async (req, res) => {
+  console.log("VariantPay CALLBACK RECEIVED:", req.body);
     try {
-        console.log("VariantPay Callback Received:", req.body);
-
         const {
             sanTxnId,
             status,
