@@ -72,7 +72,7 @@ export async function refreshToken(req, res) {
 // GET /profile
 export async function getProfile(req, res) {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user.id).select("-password").populate("subscriptionPlan");
     res.json(user);
     // console.log(user);
     

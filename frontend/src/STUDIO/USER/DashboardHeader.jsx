@@ -41,7 +41,7 @@
 //           <div className="flex items-center gap-3">
 //             <div className="relative">
 //               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center shadow-lg">
-//                 <button onClick= { () => moveToHome()}><span className="font-bold text-sm">LS</span></button>
+//                 <button onClick= { () => moveToHome()}><span className="font-bold text-sm">S</span></button>
 //               </div>
 //               <div className="absolute -top-1 -right-1 h-3 w-3">
 //                 <Sparkles className="h-3 w-3 text-yellow-500" />
@@ -193,7 +193,7 @@ export function DashboardHeader({ currentPage, onPageChange }) {
             <div className="relative">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center shadow-lg cursor-pointer">
                 <button onClick={moveToHome}>
-                  <span className="font-bold text-sm">LS</span>
+                  <span className="font-bold text-xl">S</span>
                 </button>
               </div>
               <div className="absolute -top-1 -right-1 h-3 w-3">

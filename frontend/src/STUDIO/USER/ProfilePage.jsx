@@ -235,11 +235,6 @@ export function ProfilePage() {
         const res = await axiosClient.get("/user-data", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        // res.data contains: profile, email, posts
-        // console.log("LinkedIn Data:", res.data);
-
-        // Safely update user state
         if (res.data?.profile) {
           setUser((prev) => ({
             ...prev,
@@ -259,7 +254,8 @@ export function ProfilePage() {
     fetchLinkedInData();
   }, []);
 
-
+  console.log(user);
+  
 
   return (
     <div className="space-y-6">
@@ -535,7 +531,7 @@ export function ProfilePage() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0">
-            PRO
+            {user?.subscriptionPlan.name.toUpperCase()}
           </Badge>
           Professional Plan
         </CardTitle>
@@ -545,28 +541,37 @@ export function ProfilePage() {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>Posts this month</span>
-            <span>15/100</span>
+            <span> {user?.usageCount} / {user?.monthlyQuota} </span>
           </div>
-          <Progress value={15} className="h-2" />
+          {/* <Progress value={15} className="h-2" /> */}
         </div>
 
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>AI generations</span>
             <span>8/50</span>
           </div>
           <Progress value={16} className="h-2" />
-        </div>
+        </div> */}
 
-        <Separator />
+        {/* <Separator /> */}
 
-        <div className="text-center space-y-3">
-          <p className="text-sm text-muted-foreground">Renewal: August 24, 2024</p>
-          <Button variant="outline" size="sm" className="w-full gap-2">
-            <CreditCard className="h-3 w-3" />
-            Manage Subscription
-          </Button>
-        </div>
+              <div className="text-left space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Renewal:{" "}
+                  {user?.nextBillingDate
+                    ? new Date(user.nextBillingDate).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                    : "N/A"}
+                </p>
+                <Button variant="outline" size="sm" className="w-full gap-2">
+                  <CreditCard className="h-3 w-3" />
+                  Manage Subscription
+                </Button>
+              </div>
       </CardContent>
     </Card>
 
@@ -608,298 +613,3 @@ export function ProfilePage() {
 }
 
 export default ProfilePage;
-
-{/* <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="bg-gradient-to-br from-white to-indigo-50/30 border-0 shadow-lg">
-            <CardHeader>
-              <div className="flex items-center justify-center gap-4 lg:gap-0 lg:justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <UserIcon className="h-4 w-4 text-indigo-600" />
-                  Profile Information
-                </CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (!isEditing) {
-                      setEditForm({
-                        firstName: firstName || "",
-                        lastName: lastName || "",
-                        email: user?.email || "",
-                        jobPost: user?.jobPost || ""
-                      });
-                    }
-                    setIsEditing(!isEditing);
-                  }}
-                  className="gap-2"
-                >
-                  <Edit className="h-3 w-3" />
-                  {isEditing ? 'Cancel' : 'Edit'}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                  {user?.linkedinProfile?.picture ? (
-                    <img
-                      src={user.linkedinProfile.picture}
-                      alt={`${firstName} ${lastName}`}
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  ) : (
-                    getInitials()
-                  )}
-                </div>
-                <div className="flex-1">
-                  {isEditing ? (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor="firstName" className="text-sm">First Name</Label>
-                          <Input
-                            id="firstName"
-                            value={editForm.firstName}
-                            onChange={(e) => setEditForm(prev => ({ ...prev, firstName: e.target.value }))}
-                            placeholder="First name"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="lastName" className="text-sm">Last Name</Label>
-                          <Input
-                            id="lastName"
-                            value={editForm.lastName}
-                            onChange={(e) => setEditForm(prev => ({ ...prev, lastName: e.target.value }))}
-                            placeholder="Last name"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="jobPost" className="text-sm">Job</Label>
-                        <Input
-                          id="jobPost"
-                          type="text"
-                          value={editForm.jobPost}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, jobPost: e.target.value }))}
-                          placeholder="Python Developer"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="email" className="text-sm">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={user.email}
-                          disabled
-                          onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
-                          placeholder="Email address"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button onClick={handleSaveProfile} className="gap-2 bg-gradient-to-r from-indigo-600 to-purple-600">
-                          <CheckCircle className="h-3 w-3" />
-                          Save Changes
-                        </Button>
-                        <Button variant="outline" onClick={() => setIsEditing(false)}>
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-
-                    <div>
-                      <h3 className="text-xl font-semibold">{`${firstName} ${lastName}`}</h3>
-                      <p className="text-muted-foreground">{user?.jobPost}</p>
-                      <p className="text-sm text-muted-foreground">{user?.email}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-white to-blue-50/30 border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-blue-600" />
-                Connected Platforms
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {platforms.map((platform, index) => {
-                const Icon = platform.icon
-                return (
-                  <div key={index} className="flex items-center justify-between p-4 rounded-xl border bg-gradient-to-r from-gray-50 to-white hover:shadow-md transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      <div className={`p-3 bg-gradient-to-r ${platform.color} rounded-lg text-white`}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold flex items-center gap-2">
-                          {platform.name}
-                          {platform.connected ? (
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <XCircle className="h-4 w-4 text-red-500" />
-                          )}
-                        </h4>
-                        <div className="text-sm text-muted-foreground">
-                          {platform.connected ? (
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-4">
-                                <span className="flex items-center gap-1">
-                                  <Users className="h-3 w-3" />
-                                  {platform.followers} followers
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <BarChart3 className="h-3 w-3" />
-                                  {platform.posts} posts
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1 text-xs">
-                                <Clock className="h-3 w-3" />
-                                Last sync: {platform.lastSync}
-                              </div>
-                            </div>
-                          ) : (
-                            <span>Not connected</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {platform.connected ? (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => disConnect(platform.name)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            Disconnect
-                          </Button>
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleReconnect(platform.name)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            Reconnect
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          size="sm"
-                          className={`gap-2 bg-gradient-to-r ${platform.color} hover:opacity-90`}
-                          onClick={() => handlePlatformConnect(platform.name)}
-                        >
-                          <Plus className="h-3 w-3" />
-                          Connect
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card className="bg-gradient-to-br from-white to-green-50/30 border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-4 w-4 text-green-600" />
-                Account Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label className="font-medium">Push Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Get notified about post performance
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notificationsEnabled}
-                    onCheckedChange={setNotificationsEnabled}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-white to-yellow-50/30 border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0">
-                  PRO
-                </Badge>
-                Professional Plan
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Posts this month</span>
-                  <span>15/100</span>
-                </div>
-                <Progress value={15} className="h-2" />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>AI generations</span>
-                  <span>8/50</span>
-                </div>
-                <Progress value={16} className="h-2" />
-              </div>
-
-              <Separator />
-
-              <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Renewal: August 24, 2024
-                </p>
-                <Button variant="outline" size="sm" className="w-full gap-2">
-                  <CreditCard className="h-3 w-3" />
-                  Manage Subscription
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-white to-red-50/30 border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-red-600" />
-                Security
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <Button variant="outline" className="w-full gap-2">
-                  <Settings className="h-4 w-4" />
-                  Change Password
-                </Button>
-                
-                <Separator />
-                <Button
-                  variant="outline"
-                  className="w-full gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div> */}
