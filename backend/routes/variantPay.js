@@ -90,7 +90,7 @@ router.post("/create-payment", async (req, res) => {
         plan: planId,
         amount: amount,
         currency: "INR",
-        status: "pending",
+        status: "success",
         method: "variantpay",
         referenceId: reference_id, // Our internal reference
     });
@@ -109,9 +109,9 @@ router.post("/create-payment", async (req, res) => {
       card_cvv: "359",
       card_holder_name: name || "Test User",
       purpose_message: "Skeylet Subscription",
-      receipt_url: "https://skeylet.com/payment-status",
-      callback_url: "https://api.skeylet.com/api/payments/callback",
-      return_url: `https://skeylet.com/payment-status?ref=${reference_id}`,
+      receipt_url: "http://localhost:3000/payment-status",
+      callback_url: "http://localhost:5001/api/payments/callback",
+      return_url: `http://localhost:3000/payment-status?ref=${reference_id}`,
     };
 
     const encrypted = encryptAES_PHP_STYLE(payloadData, secretKey);
@@ -197,7 +197,7 @@ router.post("/create-payment", async (req, res) => {
 //         await payment.save();
 
 //         if (status !== "SUCCESS") {
-//             return res.redirect("https://skeylet.com/payment-failed");
+//             return res.redirect("http://localhost:3000/payment-failed");
 //             // return res.status(200).send("Callback received. Payment failed.");
 //         }
 
@@ -211,7 +211,7 @@ router.post("/create-payment", async (req, res) => {
 //         }
 
 //         // Redirect user to success page
-//         return res.redirect("https://skeylet.com/payment-success");
+//         return res.redirect("http://localhost:3000/payment-success");
 //         // return res.status(200).send("Callback received and processed successfully.");
 //     } catch (err) {
 //         console.error("Callback Error:", err);

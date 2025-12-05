@@ -21,11 +21,11 @@ const Login = () => {
       const { accessToken, refreshToken, name } = res.data;
 
       // ✅ Save tokens
-      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("token", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
 
       // ✅ Call login context
-      login(accessToken, name);
+      login(accessToken, refreshToken,name);
 
       toast.success("Logged In Successfully", {
         autoClose: 1000,

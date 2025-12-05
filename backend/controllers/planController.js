@@ -71,6 +71,7 @@ export const getPlans = async (req, res) => {
 export const subscribePlan = async (req, res) => {
   try {
     const { userId, planId, paymentStatus, paymentId, referenceId, amount } = req.body;
+    console.log(req.body)
 
     if (!userId || !planId || !referenceId) {
       return res.status(400).json({ message: "Missing required fields." });

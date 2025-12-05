@@ -96,9 +96,9 @@ export function AuthPage({ onLogin }) {
                 });
 
                 const { accessToken, refreshToken, name } = res.data;
-                localStorage.setItem("accessToken", accessToken);
+                localStorage.setItem("token", accessToken);
                 localStorage.setItem("refreshToken", refreshToken);
-                login(accessToken, name);
+                login(accessToken,refreshToken, name);
 
                 toast.success("Logged in successfully!", { autoClose: 1000 });
 
@@ -293,7 +293,7 @@ export function AuthPage({ onLogin }) {
                                 <Button
                                     variant="outline"
                                     className="w-full gap-2 hover:bg-gray-50 transition-all duration-300"
-                                    onClick={() => window.location.href = "https://api.skeylet.com/auth/google"}
+                                    onClick={() => window.location.href = "http://localhost:5001/auth/google"}
                                 >
                                     <Mail className="h-4 w-4" />
                                     Continue with Google
