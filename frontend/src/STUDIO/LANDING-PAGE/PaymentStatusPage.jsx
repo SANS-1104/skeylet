@@ -48,12 +48,13 @@ export function PaymentStatusPage() {
           localStorage.removeItem("variantPayReferenceId");
           localStorage.removeItem("selectedPlan");
 
-          setTimeout(() => navigate("/", { replace: true }), 1500);
+          setTimeout(() => navigate("/payment-success", { replace: true }), 1500);
         } 
         else if (status === "FAILED") {
           setPaymentStatus("FAILED");
           toast.error("Payment failed.");
           localStorage.removeItem("variantPayReferenceId");
+          setTimeout(() => navigate("/payment-failed", { replace: true }), 1500);
         }
         else {
           // Pending → Poll again
@@ -64,6 +65,7 @@ export function PaymentStatusPage() {
         console.error("Verification error:", err);
         setVerificationError("Error verifying payment.");
         setPaymentStatus("FAILED");
+        setTimeout(() => navigate("/payment-failed", { replace: true }), 1500);
       }
     };
 

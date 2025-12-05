@@ -6,7 +6,7 @@ const PaymentSchema = new Schema({
   plan: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
   amount: { type: Number, required: true },
   currency: { type: String, default: "USD" },
-  status: { type: String, enum: ["none","pending", "active"], default: "none" },
+  status: { type: String, enum: ["none","pending", "active", "failed"], default: "none" },
   method: { type: String, enum: ["variantpay","razorpay","stripe", "paypal"], default: "variantpay" },
   referenceId: { type: String, required: true, unique: true },
   PaymentId: { type: String },
