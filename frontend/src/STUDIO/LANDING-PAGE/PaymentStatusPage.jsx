@@ -1,3 +1,5 @@
+// frontend/src/STUDIO/PaymentStatusPage.jsx
+
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../LANDING-PAGE/ui/card";
@@ -17,7 +19,11 @@ export function PaymentStatusPage() {
   const userName = profile?.name;
 
   // Your stored reference ID from create-payment API
-  const storedReferenceId = localStorage.getItem("variantPayReferenceId");
+  // const storedReferenceId = localStorage.getItem("variantPayReferenceId");
+  const query = new URLSearchParams(window.location.search);
+  const refFromURL = query.get("ref");
+
+  const storedReferenceId = refFromURL || localStorage.getItem("variantPayReferenceId");
 
   // --------------- MAIN POLLING LOGIC ---------------
   useEffect(() => {
