@@ -83,7 +83,7 @@ export const redditCallback = async (req, res) => {
     console.log("✅ Reddit tokens saved for user:", updatedUser.email);
 
     // Redirect to personalized frontend dashboard
-    res.redirect(`http://localhost:3000/dashboard/${slugifiedName}`);
+    res.redirect(`https://skeylet.com/dashboard/${slugifiedName}`);
 
   } catch (err) {
     console.error("Reddit OAuth Error:", err.response?.data || err.message);

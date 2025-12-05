@@ -84,7 +84,7 @@ passport.deserializeUser((obj, done) => done(null, obj));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cors({
-  origin: ["http://localhost:3000", "https://www.skeylet.com","https://localhost:3000"], // 🔹 live frontend
+  origin: ["https://skeylet.com", "https://www.skeylet.com","https://localhost:3000"], // 🔹 live frontend
   credentials: true,
 }));
 // ----------------------------------------------------------
