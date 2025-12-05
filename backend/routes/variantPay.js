@@ -90,7 +90,7 @@ router.post("/create-payment", async (req, res) => {
         plan: planId,
         amount: amount,
         currency: "INR",
-        status: "success",
+        status: "active",
         method: "variantpay",
         referenceId: reference_id, // Our internal reference
     });
