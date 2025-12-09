@@ -335,7 +335,7 @@ router.get("/verify-latest/:userId", async (req, res) => {
 
     // Ask Vegaah official for status check endpoint
     const verifyResponse = await axios.post(
-      "https://payments.vegaahpay.com/txnStatus",
+      "https://api.skeylet.com/api/payments/callback",
       { reference_id: payment.referenceId },
       { headers }
     );
