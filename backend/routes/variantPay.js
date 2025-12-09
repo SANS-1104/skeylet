@@ -318,5 +318,68 @@ router.get("/status/:referenceId", async (req, res) => {
   }
 });
 
+router.get("/verify-latest/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const payment = await Payment.findOne({
+      user: userId,
+      status: "pending"
+    }).sort({ createdAt: -1 });
+
+    if (!payment) {
+      return res.json({ status: "NONE", message: "No pending payment" });
+    }
+
+    console.log("🔄 Force verifying payment:", payment.referenceId);
+
+    // Ask Vegaah official for status check endpoint
+    const verifyResponse = await axios.post(
+      "https://payments.vegaahpay.com/txnStatus",
+      { reference_id: payment.referenceId },
+      { headers }
+    );
+
+    const paymentStatus =
+      verifyResponse.data.status ||
+      verifyResponse.data.txnStatus ||
+      verifyResponse.data.payStatus;
+
+    if (!paymentStatus) {
+      return res.json({ status: "UNKNOWN", message: "No status returned" });
+    }
+
+    if (paymentStatus.toUpperCase() === "SUCCESS") {
+      console.log("🎯 Payment verified SUCCESS");
+
+      payment.status = "active";
+      payment.PaymentId = verifyResponse.data.txnId;
+      payment.updatedAt = new Date();
+      payment.validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      await payment.save();
+
+      // Update user subscription too
+      const user = await User.findById(payment.user);
+      const plan = await Plan.findById(payment.plan);
+      if (user && plan) {
+        user.subscriptionPlan = plan._id;
+        user.subscriptionStatus = "active";
+        user.monthlyQuota = plan.monthlyQuota;
+        user.usageCount = 0;
+        user.nextBillingDate = payment.validUntil;
+        await user.save();
+      }
+
+      return res.json({ status: "ACTIVE" });
+    }
+
+    return res.json({ status: paymentStatus.toUpperCase() });
+
+  } catch (err) {
+    console.error("Force verify error:", err);
+    return res.status(500).json({ status: "ERROR" });
+  }
+});
+
 
 export default router;
