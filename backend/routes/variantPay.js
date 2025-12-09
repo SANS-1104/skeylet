@@ -90,7 +90,7 @@ router.post("/create-payment", async (req, res) => {
         plan: planId,
         amount: amount,
         currency: "INR",
-        status: "active",
+        status: "pending",
         method: "variantpay",
         referenceId: reference_id, // Our internal reference
     });
@@ -163,114 +163,66 @@ router.post("/create-payment", async (req, res) => {
 });
 
 // ---------------------- VERIFY PAYMENT (Final Step) ----------------------
-// router.post("/callback", async (req, res) => {
-//   console.log("VariantPay CALLBACK RECEIVED:", req.body);
-//     try {
-//         const {
-//             sanTxnId,
-//             status,
-//             responseCode,
-//             message,
-//             cTxnId
-//         } = req.body;
-
-//         if (!cTxnId || !sanTxnId) {
-//             return res.status(400).send("Missing required fields.");
-//         }
-
-//         // Find payment using cTxnId (reference_id)
-//         const payment = await Payment.findOne({ referenceId: cTxnId });
-
-//         if (!payment) {
-//             return res.status(404).send("Payment record not found.");
-//         }
-
-//         if (payment.status === "active") {
-//             return res.send("Already processed");
-//         }
-
-//         // Update payment
-//         payment.status = status === "SUCCESS" ? "active" : "failed";
-//         payment.PaymentId = sanTxnId;
-//         payment.updatedAt = new Date();
-//         payment.validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-//         await payment.save();
-
-//         if (status !== "SUCCESS") {
-//             return res.redirect("https://skeylet.com/payment-failed");
-//             // return res.status(200).send("Callback received. Payment failed.");
-//         }
-
-//         // Update user subscription
-//         const user = await User.findById(payment.user);
-//         if (user) {
-//             user.subscriptionPlan = payment.plan;
-//             user.nextBillingDate = payment.validUntil;
-//             user.subscriptionStatus = "active";
-//             await user.save();
-//         }
-
-//         // Redirect user to success page
-//         return res.redirect("https://skeylet.com/payment-success");
-//         // return res.status(200).send("Callback received and processed successfully.");
-//     } catch (err) {
-//         console.error("Callback Error:", err);
-//         return res.status(500).send("Server error");
-//     }
-// });
-
 router.post("/callback", async (req, res) => {
   console.log("VariantPay CALLBACK RECEIVED:", req.body);
+    try {
+        const {
+            sanTxnId,
+            status,
+            responseCode,
+            message,
+            cTxnId
+        } = req.body;
 
-  try {
-    const reference_id =
-      req.body.cTxnId ||
-      req.body.reference_id ||
-      req.body.our_reference_id;
+        if (!cTxnId || !sanTxnId) {
+            return res.status(400).send("Missing required fields.");
+        }
 
-    const status =
-      req.body.payment_status ||
-      req.body.status ||
-      req.body.responseCode;
+        // Find payment using cTxnId (reference_id)
+        const payment = await Payment.findOne({ referenceId: cTxnId });
 
-    if (!reference_id) {
-      console.log("❌ Missing reference_id in callback");
-      return res.json({ status: "error", message: "Missing reference_id" });
+        if (!payment) {
+            return res.status(404).send("Payment record not found.");
+        }
+
+        if (payment.status === "active") {
+            return res.send("Already processed");
+        }
+
+        // Update payment
+        payment.status = status === "SUCCESS" ? "active" : "failed";
+        payment.PaymentId = sanTxnId;
+        payment.updatedAt = new Date();
+        payment.validUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+        await payment.save();
+
+        if (status !== "SUCCESS") {
+            return res.redirect("https://skeylet.com/payment-failed");
+        // return res.status(200).send("Callback received. Payment failed.");
+      }
+
+      // Update user subscription
+      const user = await User.findById(payment.user);
+      const plan = await Plan.findById(payment.plan);
+
+      if (user && plan) {
+        user.subscriptionPlan = plan._id;
+        user.subscriptionStatus = "active";
+        user.monthlyQuota = plan.monthlyQuota;
+        user.usageCount = 0;
+        user.nextBillingDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 month validity
+
+        await user.save();
+      }
+
+        // Redirect user to success page
+        return res.redirect("https://skeylet.com/payment-success");
+        // return res.status(200).send("Callback received and processed successfully.");
+    } catch (err) {
+        console.error("Callback Error:", err);
+        return res.status(500).send("Server error");
     }
-
-    const payment = await Payment.findOne({ referenceId: reference_id });
-
-    if (!payment) {
-      console.log("❌ Payment not found for", reference_id);
-      return res.json({ status: "error", message: "Payment not found" });
-    }
-
-    if (payment.status !== "pending") {
-      return res.json({ status: "ok", message: "Already processed" });
-    }
-
-    const successCodes = ["SUCCESS", "1", "01", "000", "00"];
-    const isSuccess = successCodes.includes(
-      status?.toString().toUpperCase()
-    );
-
-    payment.status = isSuccess ? "active" : "failed";
-    payment.PaymentId = req.body.sanTxnId || req.body.bankTxnId;
-    payment.updatedAt = new Date();
-    payment.validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-
-    await payment.save();
-
-    console.log("💰 Payment updated to:", payment.status, "for", reference_id);
-
-    return res.json({ status: "ok" });
-
-  } catch (err) {
-    console.error("Callback Error:", err);
-    return res.json({ status: "error" });
-  }
 });
-
 
 router.get("/status/:referenceId", async (req, res) => {
   try {

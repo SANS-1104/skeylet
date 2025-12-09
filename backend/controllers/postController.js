@@ -4,6 +4,7 @@ import Post from "../models/Post.js";
 import { postToLinkedIn } from "../utils/postToLinkedIn.js";
 import { postToFacebook } from "../utils/postToFacebook.js";
 import { postToSubreddit, refreshRedditToken } from "../utils/postToReddit.js";
+import { postToInstagram } from "../utils/postToInstagram.js";
 import redditAgenda from "../scheduler/redditAgenda.js";
 import agenda from "../scheduler/agenda.js";
 import facebookAgenda from "../scheduler/facebookAgenda.js";
@@ -299,6 +300,19 @@ export const manualPost = async (req, res) => {
         image: post.image,
       });
     }
+
+    // ---------- Instagram ----------
+    if (platform === "instagram") {
+      if (!user.instagramAccessToken || !user.instagramBusinessAccountId) {
+        return res.status(400).json({ error: "Instagram not connected" });
+      }
+
+      result = await postToInstagram(user, {
+        content: post.content,
+        image: post.image, // Must be a public URL!
+      });
+    }
+
 
     /* -----------------------------------------
      🔹 UPDATE POST STATUS

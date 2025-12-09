@@ -42,6 +42,12 @@ const UserSchema = new Schema(
     facebookRefreshToken: { type: String },
     facebookUserAccessToken: { type: String },
 
+    // Instagram Integration Fields
+    instagramBusinessAccountId: { type: String },
+    instagramAccessToken: { type: String },
+    autoPostInstagram: { type: Boolean, default: false },
+
+
     subscriptionPlan: {
       type: Schema.Types.ObjectId,
       ref: "Plan",

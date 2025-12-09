@@ -169,52 +169,6 @@ export function CreateBlogPage() {
 
   const [generatedByAI, setGeneratedByAI] = useState(false);
 
-  // const handleGenerate = async () => {
-  //   if (!topic.trim() && postMode === "custom") {
-  //     toast.error("Please enter a topic");
-  //     return;
-  //   }
-  //   setLoading(true);
-
-  //   try {
-  //     const res = await axiosClient.post("/generate-blog", {
-  //       topic,
-  //       content,
-  //       language,
-  //       tone,
-  //       image,
-  //       wordCount,
-  //       viralityScore,
-  //       // Instead of 'status', let backend handle platforms.linkedin.status
-  //       linkedinAutoPost, // send this flag
-  //     });
-
-  //     const data = res.data;
-
-  //     // Update UI fields with returned content
-  //     if (data.title || data.video_title) setTopic(data.title || data.video_title);
-  //     if (data.script || data.generated_text) setContent(data.script || data.generated_text);
-  //     if (data.picture || data.image) setImage(data.picture || data.image);
-
-  //     setOutput(data);
-  //     setGeneratedByAI(true);
-
-  //     toast.success("Blog generated successfully");
-
-  //     // ✅ Notify if auto-post to LinkedIn happened
-  //     if (data.platforms?.linkedin?.status === "posted") {
-  //       toast.success("Successfully posted to LinkedIn");
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Failed to generate blog");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-
-
   const handleGenerate = async () => {
   if (!topic.trim() && postMode === "custom") {
     toast.error("Please enter a topic");
@@ -448,7 +402,7 @@ export function CreateBlogPage() {
   const handleRedditAutoPostToggle = async () => {
     const newValue = !redditAutoPost;
     try {
-      await axiosClient.put("/Redditpreferences", { autoPostReddit: newValue });
+      await axiosClient.put("/Redditpreferences", { redditAutoPost: newValue });
       setRedditAutoPost(newValue);
       toast.success(`Auto-post ${newValue ? "enabled" : "disabled"}`, { autoClose: 1000 });
     } catch (err) {
@@ -561,7 +515,7 @@ useEffect(() => {
 const handleFacebookAutoPostToggle = async () => {
   const newValue = !facebookAutoPost;
   try {
-    await axiosClient.put("/facebook/preferences", { autoPostFacebook: newValue });
+    await axiosClient.put("/facebook/preferences", { facebookAutoPost: newValue });
     setFacebookAutoPost(newValue);
     toast.success(`Facebook auto-post ${newValue ? "enabled" : "disabled"}`, { autoClose: 1000 });
   } catch (err) {
@@ -652,6 +606,95 @@ useEffect(() => {
   }
 }, [facebookAutoPost, topic, content, selectedFacebookPages]);
 
+
+
+// ------------------ Instagram ------------------
+
+const [instagramAutoPost, setInstagramAutoPost] = useState(false);
+
+  // --- Toggle Handler for Facebook Auto-Post ---
+const handleInstagramAutoPostToggle = async () => {
+  const newValue = !instagramAutoPost;
+  try {
+    await axiosClient.put("/instagram/preferences", { instagramAutoPost: newValue });
+    setInstagramAutoPost(newValue);
+    toast.success(`Instagram auto-post ${newValue ? "enabled" : "disabled"}`, { autoClose: 1000 });
+  } catch (err) {
+    console.error("Failed to update Instagram auto-post:", err);
+    toast.error("Failed to update Instagram auto-post");
+  }
+};
+
+const handleManualInstagramPost = async () => {
+  if (!topic || !content) {
+    toast.error("No content available to post");
+    return;
+  }
+
+  try {
+    // Step 1️⃣ Create or update unified draft post
+    const createRes = await axiosClient.post("/unifiedPost/create", {
+      postId: currentDraftId || undefined,
+      title: topic || "Untitled Draft",
+      topic: selectTopic || "General",
+      content,
+      image: image || "",
+      viralityScore,
+      platform: "instagram",
+    });
+
+    const post = createRes.data.post;
+    setCurrentDraftId(post._id);
+
+    // Step 2️⃣ Manual post request
+    await axiosClient.post("/unifiedPost/manualPost", {
+      postId: post._id,
+      platform: "instagram",
+    });
+
+    toast.success("Posted to Instagram successfully!");
+  } catch (err) {
+    console.error("❌ Instagram post failed:", err);
+    toast.error(err.response?.data?.error || "Failed to post on Instagram");
+  }
+};
+
+useEffect(() => {
+    if (instagramAutoPost && topic && content) {
+      (async () => {
+        try {
+          // Step 1️⃣: Create or update unified draft post
+          const createRes = await axiosClient.post("/unifiedPost/create", {
+            postId: currentDraftId, // reuse existing draft
+            title: topic,
+            topic: selectTopic || "General",
+            content,
+            image: image || "",
+            viralityScore,
+            platform: "instagram",
+            // extra: {
+            //   subreddit: selectedSubreddit,
+            //   flairId: selectedFlair || null,
+            // },
+          });
+
+          const post = createRes.data.post;
+          setCurrentDraftId(post._id); // store/update draft ID
+
+          // Step 2️⃣: Manually post via unified route
+          await axiosClient.post("/unifiedPost/manualPost", {
+            postId: post._id,
+            platform: "instagram",
+          });
+
+          // toast.success(`Auto-posted to r/${selectedSubreddit}`);
+        } catch (err) {
+          // console.error("❌ Auto-post to Reddit failed:", err);
+          // toast.error("Auto-post to Reddit failed");
+        }
+      })();
+    }
+  }, [instagramAutoPost, topic, content]);
 
   return (
     <div className="space-y-6">
@@ -1079,6 +1122,17 @@ useEffect(() => {
                 />
               </div>
 
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="auto-post">Auto-post to Instagram</Label>
+                </div>
+                <Switch
+                  id="auto-post"
+                  checked={linkedinAutoPost}
+                  onCheckedChange={handleInstagramAutoPostToggle}
+                />
+              </div>
+
 
               <Separator />
 
@@ -1160,6 +1214,18 @@ useEffect(() => {
                 >
                   <Send className="h-4 w-4" />
                   Post Now to Facebook
+                </Button>
+
+                <Button
+                  className={`w-full gap-2 shadow-lg transition-all duration-300 ${instagramAutoPost
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl"
+                    }`}
+                  onClick={handleManualInstagramPost}
+                  disabled={instagramAutoPost}
+                >
+                  <Send className="h-4 w-4" />
+                  Post Now to Instagram
                 </Button>
 
                 <Button

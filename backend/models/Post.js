@@ -39,6 +39,7 @@ const postSchema = new mongoose.Schema(
       linkedin: { type: platformSchema, default: () => ({}) },
       reddit: { type: platformSchema, default: () => ({}) },
       facebook: { type: platformSchema, default: () => ({}) },
+      instagram: { type: platformSchema, default: () => ({}) },
     },
 
     // Analytics reference
