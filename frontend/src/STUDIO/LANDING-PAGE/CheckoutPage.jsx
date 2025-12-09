@@ -174,7 +174,8 @@ export function CheckoutPage() {
         planId: plan._id,
         billingType: plan.billingType,
       });
-
+      console.log(data);
+      
       // Check if backend returned success
       if (!data?.success) {
         // Show message from backend if available
