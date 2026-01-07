@@ -6,12 +6,16 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../Navbar/AuthContext";
 import axiosClient from "../../api/axiosClient";
 import { toast } from "react-toastify";
+import { useState, useEffect } from "react";
+
 
 export function HeroSection({ onScrollToPricing }) {
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 500], [0, 150]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
   const scale = useTransform(scrollY, [0, 300], [1, 0.8]);
+  const [openVideo, setOpenVideo] = useState(false);
+
 
   const platforms = [
     { Icon: Linkedin, color: "from-blue-600 to-blue-400", name: "LinkedIn", delay: 0, position: "top-[20%] left-[8%]" },
@@ -32,7 +36,7 @@ export function HeroSection({ onScrollToPricing }) {
     try {
       // Logged in → check payment status
       const res = await axiosClient.get("/paymentStatus");
-      const { status } = res.data;      
+      const { status } = res.data;
 
       if (status === "active") {
         // User has an active plan → dashboard
@@ -54,6 +58,15 @@ export function HeroSection({ onScrollToPricing }) {
     window.dispatchEvent(new Event("storage"));
   };
 
+  useEffect(() => {
+  const handleEsc = (e) => {
+    if (e.key === "Escape") setOpenVideo(false);
+  };
+  window.addEventListener("keydown", handleEsc);
+  return () => window.removeEventListener("keydown", handleEsc);
+}, []);
+
+
   return (
     <section className="relative min-h-screen pt-32 pb-20 px-4 overflow-hidden flex items-center">
       {/* Animated Background Elements */}
@@ -70,7 +83,7 @@ export function HeroSection({ onScrollToPricing }) {
           }}
           className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e510_1px,transparent_1px),linear-gradient(to_bottom,#4f46e510_1px,transparent_1px)] bg-[size:4rem_4rem]"
         />
-        
+
         {/* Gradient Orbs with Complex Animation */}
         <motion.div
           animate={{
@@ -100,7 +113,7 @@ export function HeroSection({ onScrollToPricing }) {
           }}
           className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-blue-500/30 via-cyan-500/30 to-teal-500/30 rounded-full blur-3xl"
         />
-        
+
         {/* Enhanced Floating Particles */}
         {[...Array(30)].map((_, i) => (
           <motion.div
@@ -124,7 +137,7 @@ export function HeroSection({ onScrollToPricing }) {
             }}
           />
         ))}
-        
+
         {/* Spiral Lines */}
         {[...Array(5)].map((_, i) => (
           <motion.div
@@ -267,8 +280,8 @@ export function HeroSection({ onScrollToPricing }) {
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.4 + i * 0.1, type: "spring", stiffness: 200 }}
-                  whileHover={{ 
-                    scale: 1.3, 
+                  whileHover={{
+                    scale: 1.3,
                     rotate: [0, -10, 10, -10, 0],
                     transition: { duration: 0.5 }
                   }}
@@ -357,60 +370,13 @@ export function HeroSection({ onScrollToPricing }) {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="relative"
           >
-            {/* Floating Platform Icons with Advanced Animations */}
-            {platforms.map(({ Icon, color, name, delay, position }, index) => (
-              <motion.div
-                key={name}
-                initial={{ opacity: 0, scale: 0, rotate: -180 }}
-                animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                transition={{ 
-                  duration: 0.8, 
-                  delay: 0.8 + delay,
-                  type: "spring",
-                  stiffness: 200,
-                }}
-                className={`absolute hidden lg:block ${position} z-10`}
-              >
-                <motion.div
-                  animate={{
-                    y: [0, -20, 0],
-                    rotate: [0, 5, -5, 0],
-                  }}
-                  transition={{
-                    duration: 4 + index * 0.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  whileHover={{ 
-                    scale: 1.3, 
-                    rotate: 360,
-                    transition: { duration: 0.6 }
-                  }}
-                  className={`w-16 h-16 bg-gradient-to-br ${color} rounded-2xl shadow-2xl flex items-center justify-center cursor-pointer backdrop-blur-sm border border-white/20 relative`}
-                >
-                  {/* Pulse Effect */}
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.5, 1],
-                      opacity: [0.5, 0, 0.5],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      delay: index * 0.4,
-                    }}
-                    className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${color}`}
-                  />
-                  <Icon className="w-8 h-8 text-white relative z-10" />
-                </motion.div>
-              </motion.div>
-            ))}
 
             {/* Video Container with Advanced Effects */}
             <motion.div
               whileHover={{ scale: 1.03, rotateY: 5, rotateX: 5 }}
               transition={{ duration: 0.4 }}
               style={{ perspective: 1000 }}
+              onClick={() => setOpenVideo(true)}
               className="relative aspect-video rounded-2xl overflow-hidden border-2 border-purple-500/30 shadow-2xl shadow-purple-500/20 bg-gradient-to-br from-slate-900 to-slate-800"
             >
               {/* Animated Scanline Effect */}
@@ -425,43 +391,20 @@ export function HeroSection({ onScrollToPricing }) {
                 }}
                 className="absolute inset-0 w-full h-20 bg-gradient-to-b from-transparent via-purple-500/10 to-transparent pointer-events-none z-20"
               />
-              
-              {/* Video Placeholder */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <motion.div
-                  whileHover={{ scale: 1.2 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="relative"
-                >
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.2, 1],
-                      opacity: [0.5, 0, 0.5],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                    }}
-                    className="absolute inset-0 bg-white rounded-full blur-2xl"
-                  />
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center shadow-2xl cursor-pointer relative overflow-hidden group">
-                    <motion.div
-                      animate={{
-                        rotate: 360,
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                    />
-                    <Play className="w-10 h-10 text-white ml-1 relative z-10" fill="white" />
-                  </div>
-                </motion.div>
-              </div>
 
-              {/* Animated Background Pattern */}
+
+              <video
+                src="/video/SKEYLET_DEMO.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover rounded-2xl z-10"
+              />
+
+
+
+              { }
               <motion.div
                 animate={{
                   backgroundPosition: ["0% 0%", "100% 100%"],
@@ -540,6 +483,37 @@ export function HeroSection({ onScrollToPricing }) {
               />
             </motion.div>
           </motion.div>
+          {openVideo && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[999] flex items-center justify-center"
+            >
+              {/* Backdrop */}
+              <div
+                className="absolute inset-0 bg-black/70 backdrop-blur-xl"
+                onClick={() => setOpenVideo(false)}
+              />
+
+              {/* Video Modal */}
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 200 }}
+                className="relative z-10 w-[90%] max-w-5xl aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/20"
+              >
+                <video
+                  src="/video/SKEYLET_DEMO.mp4"
+                  controls
+                  autoPlay
+                  className="w-full h-full object-contain bg-black"
+                />
+              </motion.div>
+            </motion.div>
+          )}
+
         </div>
       </motion.div>
     </section>
