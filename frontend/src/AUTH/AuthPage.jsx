@@ -37,53 +37,6 @@ export function AuthPage({ onLogin }) {
     })
     const navigate = useNavigate();
     const { login } = useContext(AuthContext)
-    // const handleSubmit = async (e) => {
-    //     e.preventDefault()
-
-    //     if (isLogin) {
-    //         try {
-    //             const res = await axiosClient.post("/login", {
-    //                 email: formData.email,
-    //                 password: formData.password,
-    //             })
-
-    //             const { accessToken, refreshToken, name } = res.data
-    //             localStorage.setItem("accessToken", accessToken)
-    //             localStorage.setItem("refreshToken", refreshToken)
-    //             login(accessToken, name)
-
-    //             toast.success("Logged in successfully!", { autoClose: 1000 })
-    //             console.log("Navigating to:", `/dashboard/${name}`)
-    //             navigate(`/dashboard/${name}`)
-    //             console.log("Could not navigate");
-                
-    //         } catch (err) {
-    //             toast.error("Login failed", { autoClose: 1000 })
-    //             console.error("Login error:", err)
-    //         }
-    //     } else {
-    //         if (formData.password !== formData.confirmPassword) {
-    //             toast.error("Passwords do not match", { autoClose: 1000 })
-    //             return
-    //         }
-
-    //         try {
-    //             await axiosClient.post("/signup", {
-    //                 name: `${formData.firstName} ${formData.lastName}`,
-    //                 email: formData.email,
-    //                 password: formData.password,
-    //             })
-
-    //             toast.success("Account created! Please login.", { autoClose: 1000 })
-    //             setIsLogin(true)
-    //         } catch (err) {
-    //             toast.error("Signup failed", { autoClose: 1000 })
-    //             console.error("Signup error:", err)
-    //         }
-    //     }
-    // }
-
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 

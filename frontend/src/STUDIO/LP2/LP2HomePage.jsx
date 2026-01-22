@@ -23,7 +23,7 @@ export default function LP2HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 overflow-hidden">
-      {isLoggedIn ? <Header2 /> : <Header />} {/* conditional header */}
+      {isLoggedIn ? <Header2 /> : <Header onScrollToPricing={scrollToPricing}/>} {/* conditional header */}
       <HeroSection onScrollToPricing={scrollToPricing} />
       <StatsSection />
       <FeaturesSection />

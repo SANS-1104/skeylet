@@ -5,6 +5,23 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
 // POST /signup
+// export async function signup(req, res) {
+//   try {
+//     const { name, email, password } = req.body;
+
+//     const existing = await User.findOne({ email });
+//     if (existing) return res.status(400).json({ msg: "User already exists" });
+
+//     const hash = await _hash(password, 10);
+//     const newUser = new User({ name, email, password: hash });
+//     await newUser.save();
+
+//     res.status(201).json({ msg: "User created" });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// }
+
 export async function signup(req, res) {
   try {
     const { name, email, password } = req.body;
@@ -12,15 +29,15 @@ export async function signup(req, res) {
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ msg: "User already exists" });
 
-    const hash = await _hash(password, 10);
-    const newUser = new User({ name, email, password: hash });
-    await newUser.save();
+    const newUser = new User({ name, email, password }); // ✅ plain password
+    await newUser.save(); // model will hash it
 
     res.status(201).json({ msg: "User created" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 }
+
 
 // POST /login
 export async function login(req, res) {

@@ -1,8 +1,14 @@
 import { motion, useScroll, useTransform } from "motion/react";
 import { Sparkles, Menu } from "lucide-react";
 import { useState, useEffect } from "react";
+import { AuthContext } from "../../Navbar/AuthContext";
+import React, { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import axiosClient from "../../api/axiosClient";
+import { Button } from "../LANDING-PAGE/ui/button";
 
-export function Header() {
+
+export function Header({onScrollToPricing}) {
   const [isScrolled, setIsScrolled] = useState(false);
   const { scrollY } = useScroll();
   const backgroundColor = useTransform(
@@ -10,7 +16,32 @@ export function Header() {
     [0, 100],
     ["rgba(2, 6, 23, 0)", "rgba(2, 6, 23, 0.8)"]
   );
+  const { isLoggedIn, name } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const handleLogin = async () => {
+    if (!isLoggedIn) {
+      // Not logged in → go to auth
+      navigate("/auth");
+      return;
+    }
 
+    try {
+      // Logged in → check payment status
+      const res = await axiosClient.get("/paymentStatus");
+      const { status } = res.data;
+
+      if (status === "active") {
+        // User has an active plan → dashboard
+        navigate(`/dashboard/${name}`);
+      } else {
+        // User logged in but no active plan → pricing section
+        onScrollToPricing?.();
+      }
+    } catch (err) {
+      console.error("Error fetching payment status:", err);
+      onScrollToPricing?.();
+    }
+  };
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
@@ -20,9 +51,8 @@ export function Header() {
   return (
     <motion.header
       style={{ backgroundColor }}
-      className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b transition-colors duration-300 ${
-        isScrolled ? "border-white/10" : "border-transparent"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b transition-colors duration-300 ${isScrolled ? "border-white/10" : "border-transparent"
+        }`}
     >
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo */}
@@ -67,6 +97,27 @@ export function Header() {
             </motion.a>
           ))}
         </motion.nav>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex items-center gap-3"
+        >
+          {/* <Button variant="ghost" className="hidden sm:inline-flex text-slate-300 hover:text-white hover:bg-white/10">
+            Sign In
+          </Button> */}
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button 
+                className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/30"
+                onClick={handleLogin}
+            >
+              LogIn/ Signup
+            </Button>
+          </motion.div>
+          {/* <Button variant="ghost" size="icon" className="md:hidden text-white">
+            <Menu className="w-5 h-5" />
+          </Button> */}
+        </motion.div>
 
         {/* Empty div to keep spacing consistent (removes buttons) */}
         <div className="hidden lg:block w-24"></div>
