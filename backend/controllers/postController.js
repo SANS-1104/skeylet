@@ -241,6 +241,9 @@ export const manualPost = async (req, res) => {
     /* -----------------------------------------
      🔹 POST TO LINKED PLATFORM
     ------------------------------------------ */
+    const TAGLINE = "~ Powered by Skeylet";
+
+    const finalTitle = `${post.title}\n${TAGLINE}\n`;
 
     // ---------- LinkedIn ----------
     if (platform === "linkedin") {
@@ -249,7 +252,7 @@ export const manualPost = async (req, res) => {
       }
 
       result = await postToLinkedIn(user, {
-        title: post.title,
+        title: finalTitle,
         content: post.content,
         image: post.image,
       });
@@ -273,7 +276,7 @@ export const manualPost = async (req, res) => {
         accessToken,
         redditUsername,
         redditData.subreddit,
-        post.title,
+        finalTitle,
         post.content,
         redditData.url,
         redditData.flairId
@@ -295,7 +298,7 @@ export const manualPost = async (req, res) => {
         return res.status(400).json({ error: "No valid pages selected" });
 
       result = await postToFacebook(pagesToPost, {
-        title: post.title,
+        title: finalTitle,
         content: post.content,
         image: post.image,
       });
