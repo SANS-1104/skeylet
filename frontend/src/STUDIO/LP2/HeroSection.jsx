@@ -26,29 +26,55 @@ export function HeroSection({ onScrollToPricing }) {
 
   const navigate = useNavigate();
   const { isLoggedIn, name } = useContext(AuthContext);
+  // const handleLogin = async () => {
+  //   if (!isLoggedIn) {
+  //     // Not logged in → go to auth
+  //     navigate("/auth");
+  //     return;
+  //   }
+
+  //   try {
+  //     // Logged in → check payment status
+  //     const res = await axiosClient.get("/paymentStatus");
+  //     const { status } = res.data;
+
+  //     if (status === "active") {
+  //       // User has an active plan → dashboard
+  //       navigate(`/dashboard/${name}`);
+  //     } else {
+  //       // User logged in but no active plan → pricing section
+  //       onScrollToPricing?.();
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching payment status:", err);
+  //     onScrollToPricing?.();
+  //   }
+  // };
+  
   const handleLogin = async () => {
     if (!isLoggedIn) {
       // Not logged in → go to auth
       navigate("/auth");
       return;
     }
+    navigate(`/dashboard/${name}`);
 
-    try {
-      // Logged in → check payment status
-      const res = await axiosClient.get("/paymentStatus");
-      const { status } = res.data;
+    // try {
+    //   // Logged in → check payment status
+    //   const res = await axiosClient.get("/paymentStatus");
+    //   const { status } = res.data;
 
-      if (status === "active") {
-        // User has an active plan → dashboard
-        navigate(`/dashboard/${name}`);
-      } else {
-        // User logged in but no active plan → pricing section
-        onScrollToPricing?.();
-      }
-    } catch (err) {
-      console.error("Error fetching payment status:", err);
-      onScrollToPricing?.();
-    }
+    //   if (status === "active") {
+    //     // User has an active plan → dashboard
+        
+    //   } else {
+    //     // User logged in but no active plan → pricing section
+    //     onScrollToPricing?.();
+    //   }
+    // } catch (err) {
+    //   console.error("Error fetching payment status:", err);
+    //   onScrollToPricing?.();
+    // }
   };
   const { logout: authLogout } = useContext(AuthContext);
   const handleLogout = () => {
