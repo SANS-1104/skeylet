@@ -11,8 +11,6 @@ import { toast } from "react-toastify";
 export function FinalCTASection({ onScrollToPricing }) {
   const benefits = [
     "No credit card required",
-    "14-day free trial",
-    "Cancel anytime",
   ];
 
   const navigate = useNavigate();

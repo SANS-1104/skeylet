@@ -97,7 +97,7 @@ export const facebookCallback = async (req, res) => {
     await user.save();
 
     console.log(`✅ Facebook connected with ${formattedPages.length} pages for user: ${user.email}`);
-    res.redirect("https://skeylet.com/integrations?facebook=connected");
+    res.redirect("http://localhost:3000/integrations?facebook=connected");
   } catch (err) {
     console.error("❌ Facebook Auth Error:", err.response?.data || err.message);
     res.status(500).json({ error: "Facebook authentication failed" });

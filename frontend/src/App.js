@@ -10,7 +10,6 @@ import LoginSuccess from './AUTH/LoginSuccess';
 import LandingPage from './STUDIO/LANDING-PAGE/LandingPage';
 import Dashboard from './STUDIO/USER/Dashboard';
 import { CheckoutPage } from './STUDIO/LANDING-PAGE/CheckoutPage';
-import StudioSuperAdminDashboard from './STUDIO/StudioSuperAdmin/StudioSuperAdminDashboard';
 import LP2HomePage from './STUDIO/LP2/LP2HomePage';
 import { PrivacyPolicy } from './STUDIO/LP2/PrivacyPolicy';
 import { RefundPolicy } from './STUDIO/LP2/RefundPolicy';
@@ -18,6 +17,10 @@ import { TermsOfService } from './STUDIO/LP2/TermsOfService';
 import { PaymentStatusPage } from './STUDIO/LANDING-PAGE/PaymentStatusPage';
 import PaymentSuccess from './STUDIO/LANDING-PAGE/PaymentSuccess';
 import PaymentFailed from './STUDIO/LANDING-PAGE/PaymentFailed';
+import { StudioSuperAdminLoginPage } from './STUDIO/StudioSuperAdmin/StudioSuperAdminLoginPage';
+import StudioSuperAdminDashboard from './STUDIO/StudioSuperAdmin/StudioSuperAdminDashboard';
+import SuperAdminPrivateRoute from './AUTH/SuperAdminPrivateRoute';
+
 
 
 function App() {
@@ -51,8 +54,17 @@ function App() {
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-failed" element={<PaymentFailed />} />
         <Route path="/dashboard/:name" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        {/* <Route path="/dashboard/:name" element={<Dashboard />} /> */}
-        <Route path="/studioSuperAdmin" element={<StudioSuperAdminDashboard />} />
+        <Route path="/studioSuperAdmin" element={<StudioSuperAdminLoginPage />} />
+
+        <Route
+          path="/studioSuperAdmin/dashboard"
+          element={
+            <SuperAdminPrivateRoute>
+              <StudioSuperAdminDashboard />
+            </SuperAdminPrivateRoute>
+          }
+        />
+
       </Routes>
 
       <ToastContainer

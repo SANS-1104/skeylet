@@ -26,6 +26,7 @@ import analyticsRoutes from "./routes/post.js";
 import planRoutes from "./routes/plan.js";
 import paymentRoutes from "./routes/payment.js";
 import adminRoutes from "./routes/studioAdmin.js";
+import adminAuthRoutes from "./routes/adminAuth.js";
 import razorpayRoutes from "./routes/razorPay.js";
 import redditRoutes from "./routes/redditRoutes.js";
 import unifiedRoutes from "./routes/unifiedPost.js";
@@ -84,7 +85,7 @@ passport.deserializeUser((obj, done) => done(null, obj));
 app.use(express.json({ limit: "40mb" }));
 app.use(express.urlencoded({ extended: true, limit: "40mb" }));
 app.use(cors({
-  origin: ["https://skeylet.com", "https://www.skeylet.com","https://localhost:3000"], // 🔹 live frontend
+  origin: ["http://localhost:3000", "https://www.skeylet.com","https://localhost:3000"], // 🔹 live frontend
   credentials: true,
 }));
 // ----------------------------------------------------------
@@ -113,6 +114,8 @@ app.use("/api/studioAdmin", adminRoutes);
 // app.use("/api/payments", razorpayRoutes);
 app.use("/api/payments", variantPayRoutes);
 app.use("/api/unifiedPost", unifiedRoutes);
+app.use("/api/admin", adminAuthRoutes);
+
 // ----------------------------------------------------------
 
 // -------------------- SERVER STARTUP --------------------
