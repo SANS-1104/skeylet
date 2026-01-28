@@ -99,15 +99,15 @@ export function ProfilePage() {
     }
 
     if (selectedPlatform === "LinkedIn") {
-      const authUrl = `http://localhost:5001/api/linkedin/start?token=${token}`;
+      const authUrl = `https://api.skeylet.com/api/linkedin/start?token=${token}`;
       window.location.href = authUrl;
     }
     else if (selectedPlatform === "Reddit") {
-      const authUrl = `http://localhost:5001/api/reddit/auth?token=${token}`;
+      const authUrl = `https://api.skeylet.com/api/reddit/auth?token=${token}`;
       window.location.href = authUrl;
     }
     else if (selectedPlatform === "Facebook") {
-      const authUrl = `http://localhost:5001/api/facebook/auth?token=${token}`;
+      const authUrl = `https://api.skeylet.com/api/facebook/auth?token=${token}`;
       window.location.href = authUrl;
     }
 
@@ -144,21 +144,21 @@ export function ProfilePage() {
     try {
       if (platform === "LinkedIn") {
         await axiosClient.post("/linkedin/disconnect");
-        const authUrl = `http://localhost:5001/api/linkedin/start?token=${token}`;
+        const authUrl = `https://api.skeylet.com/api/linkedin/start?token=${token}`;
         window.location.href = authUrl;
 
       } else if (platform === "Reddit") {
         await axiosClient.post("/reddit/disconnect", {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        const authUrl = `http://localhost:5001/api/reddit/auth?token=${token}`;
+        const authUrl = `https://api.skeylet.com/api/reddit/auth?token=${token}`;
         window.location.href = authUrl;
 
       } else if (platform === "Facebook") {
         await axiosClient.post("/facebook/disconnect", {
           headers: { Authorization: `Bearer ${token}` }
         });
-        const authUrl = `http://localhost:5001/api/facebook/auth?token=${token}`;
+        const authUrl = `https://api.skeylet.com/api/facebook/auth?token=${token}`;
         window.location.href = authUrl;
 
       } else {
