@@ -242,8 +242,10 @@ export const manualPost = async (req, res) => {
      🔹 POST TO LINKED PLATFORM
     ------------------------------------------ */
     const TAGLINE = "~ Powered by Skeylet";
+    const tags = "#skeylet"
 
     const finalTitle = `${post.title}\n${TAGLINE}\n`;
+    const finalContent = `${post.content} ${tags}`
 
     // ---------- LinkedIn ----------
     if (platform === "linkedin") {
@@ -253,7 +255,7 @@ export const manualPost = async (req, res) => {
 
       result = await postToLinkedIn(user, {
         title: finalTitle,
-        content: post.content,
+        content: finalContent,
         image: post.image,
       });
     }
@@ -277,7 +279,7 @@ export const manualPost = async (req, res) => {
         redditUsername,
         redditData.subreddit,
         finalTitle,
-        post.content,
+        finalContent,
         redditData.url,
         redditData.flairId
       );
@@ -299,7 +301,7 @@ export const manualPost = async (req, res) => {
 
       result = await postToFacebook(pagesToPost, {
         title: finalTitle,
-        content: post.content,
+        content: finalContent,
         image: post.image,
       });
     }
