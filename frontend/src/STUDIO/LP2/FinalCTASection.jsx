@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 
 export function FinalCTASection({ onScrollToPricing }) {
   const benefits = [
-    "No credit card required",
+    // "No credit card required",
   ];
 
   const navigate = useNavigate();
@@ -131,7 +131,7 @@ export function FinalCTASection({ onScrollToPricing }) {
             className="text-xl text-white/90 mb-8 max-w-2xl mx-auto"
           >
             Start automating across LinkedIn, Reddit & Facebook today.
-            No credit card required.
+            
           </motion.p>
 
           {/* Benefits List */}

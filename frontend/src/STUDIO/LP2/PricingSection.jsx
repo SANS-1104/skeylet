@@ -203,9 +203,9 @@ export function PricingSection() {
                   </Button>
 
                   {/* Trust Badge */}
-                  <p className="text-slate-400 text-sm text-center mt-4">
+                  {/* <p className="text-slate-400 text-sm text-center mt-4">
                     No credit card required • 14-day free trial • Cancel anytime
-                  </p>
+                  </p> */}
                 </Card>
               </motion.div>
             );
