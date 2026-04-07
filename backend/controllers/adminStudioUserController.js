@@ -12,31 +12,82 @@ export const getAllUsers = async (req, res) => {
 };
 
 // UPDATE user subscription/status/role
+// export const updateUser = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { subscriptionPlan, subscriptionStatus, role } = req.body;
+
+//     const user = await User.findById(id);
+//     if (!user) return res.status(404).json({ error: "User not found" });
+
+//     if (subscriptionPlan) {
+//       const plan = await Plan.findById(subscriptionPlan);
+//       if (!plan) return res.status(400).json({ error: "Invalid plan" });
+//       user.subscriptionPlan = plan._id;
+//       user.monthlyQuota = plan.monthlyQuota;
+//       user.usageCount = 0;
+//     }
+
+//     if (subscriptionStatus) user.subscriptionStatus = subscriptionStatus;
+//     if (role) user.role = role;
+
+//     await user.save();
+//     res.json({ message: "User updated", user });
+//   } catch (err) {
+//     res.status(500).json({ error: "Server error" });
+//   }
+// };
+
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { subscriptionPlan, subscriptionStatus, role } = req.body;
+
+    const {
+      subscriptionPlan,
+      subscriptionStatus,
+      role,
+      usageCount,
+      monthlyQuota
+    } = req.body || {};
 
     const user = await User.findById(id);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
+    // Update plan (auto resets quota & usage)
     if (subscriptionPlan) {
       const plan = await Plan.findById(subscriptionPlan);
-      if (!plan) return res.status(400).json({ error: "Invalid plan" });
+      if (!plan) {
+        return res.status(400).json({ error: "Invalid plan" });
+      }
       user.subscriptionPlan = plan._id;
       user.monthlyQuota = plan.monthlyQuota;
       user.usageCount = 0;
     }
 
-    if (subscriptionStatus) user.subscriptionStatus = subscriptionStatus;
-    if (role) user.role = role;
+    // Admin editable fields
+    if (subscriptionStatus !== undefined)
+      user.subscriptionStatus = subscriptionStatus;
+
+    if (role !== undefined)
+      user.role = role;
+
+    if (usageCount !== undefined)
+      user.usageCount = usageCount;
+
+    if (monthlyQuota !== undefined)
+      user.monthlyQuota = monthlyQuota;
 
     await user.save();
+
     res.json({ message: "User updated", user });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 };
+
 
 // DELETE user
 export const deleteUser = async (req, res) => {

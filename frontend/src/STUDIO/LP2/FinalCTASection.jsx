@@ -190,7 +190,7 @@ export function FinalCTASection({ onScrollToPricing }) {
             transition={{ duration: 0.6, delay: 0.7 }}
             className="text-white/70 text-sm mt-6"
           >
-            Trusted by professionals at Google, Meta, Amazon & 1,000+ companies
+            Trusted by 10,000+ Professionals at Google, Meta, Amazon
           </motion.p>
         </motion.div>
       </div>

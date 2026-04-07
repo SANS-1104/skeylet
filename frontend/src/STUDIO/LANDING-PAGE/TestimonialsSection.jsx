@@ -35,7 +35,7 @@ export function TestimonialsSection() {
             Loved by professionals worldwide
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Join thousands who've transformed their LinkedIn presence
+            Join 10,000+ who've transformed their LinkedIn presence
           </p>
         </div>
 

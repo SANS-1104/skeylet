@@ -136,7 +136,7 @@ export function PricingSection() {
                     </div>
                     <div>
                       <h3 className="text-3xl text-white capitalize">{plan.name}</h3>
-                      <p className="text-slate-400">Everything you need to succeed</p>
+                      <p className="text-slate-400">The complete toolkit for social media growth</p>
                     </div>
                   </div>
 

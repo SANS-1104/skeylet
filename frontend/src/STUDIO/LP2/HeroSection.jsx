@@ -7,6 +7,7 @@ import { AuthContext } from "../../Navbar/AuthContext";
 import axiosClient from "../../api/axiosClient";
 import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
+import { FaReddit } from "react-icons/fa";
 
 
 export function HeroSection({ onScrollToPricing }) {
@@ -19,7 +20,7 @@ export function HeroSection({ onScrollToPricing }) {
 
   const platforms = [
     { Icon: Linkedin, color: "from-blue-600 to-blue-400", name: "LinkedIn", delay: 0, position: "top-[20%] left-[8%]" },
-    { Icon: MessageSquare, color: "from-orange-600 to-orange-400", name: "Reddit", delay: 0.15, position: "top-[30%] right-[10%]" },
+    { Icon: FaReddit, color: "from-orange-600 to-orange-400", name: "Reddit", delay: 0.15, position: "top-[30%] right-[10%]" },
     { Icon: Facebook, color: "from-blue-700 to-blue-500", name: "Facebook", delay: 0.3, position: "bottom-[30%] left-[12%]" },
   ];
 
@@ -214,7 +215,7 @@ export function HeroSection({ onScrollToPricing }) {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
                 </span>
-                <span className="text-sm text-slate-200">Multi-Platform Social Automation</span>
+                <span className="text-sm text-slate-200">Create Once and Publish Everywhere</span>
               </motion.div>
             </motion.div>
 

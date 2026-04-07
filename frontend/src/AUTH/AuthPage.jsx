@@ -120,7 +120,7 @@ export function AuthPage({ onLogin }) {
                         <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
                             <div className="relative">
                                 <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center shadow-lg">
-                                    <span className="font-bold text-lg">LS</span>
+                                    <span className="font-bold text-lg">S</span>
                                 </div>
                                 <div className="absolute -top-1 -right-1 h-4 w-4">
                                     <Sparkles className="h-4 w-4 text-yellow-500" />
@@ -135,14 +135,14 @@ export function AuthPage({ onLogin }) {
                         </div>
 
                         <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                            Supercharge Your LinkedIn
+                            Supercharge Your
                             <span className="block bg-gradient-to-r py-2 from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                                 Content Strategy
                             </span>
                         </h2>
                         <p className="text-lg text-gray-600 mb-8">
-                            Join thousands of professionals who use AI-powered scheduling to
-                            grow their LinkedIn presence and boost engagement by 300%.
+                            Join 10,000+ professionals who use AI-powered scheduling to
+                            grow their social presence and boost engagement by 300%.
                         </p>
                     </div>
 
@@ -155,7 +155,7 @@ export function AuthPage({ onLogin }) {
                                     key={index}
                                     className="rounded-xl border bg-white/50 backdrop-blur-sm p-4 hover:shadow-lg transition-all duration-300 group"
                                 >
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-start gap-3">
                                         <div
                                             className={`p-2 bg-gradient-to-r ${feature.color} rounded-lg text-white group-hover:scale-110 transition-transform duration-300`}
                                         >
@@ -204,7 +204,7 @@ export function AuthPage({ onLogin }) {
                                 ))}
                             </div>
                             <span className="text-sm text-gray-600">
-                                4.5/5 from 1000+ reviews
+                                4.5/5 from 1,000+ reviews
                             </span>
                         </div>
                     </div>
@@ -228,7 +228,7 @@ export function AuthPage({ onLogin }) {
                             <p className="text-gray-600">
                                 {isLogin
                                     ? "Sign in to your account to continue"
-                                    : "Join thousands of professionals growing on LinkedIn"}
+                                    : "Join 10,000+ professionals growing on LinkedIn"}
                             </p>
                         </CardHeader>
 
@@ -246,7 +246,7 @@ export function AuthPage({ onLogin }) {
                                 <Button
                                     variant="outline"
                                     className="w-full gap-2 hover:bg-gray-50 transition-all duration-300"
-                                    onClick={() => window.location.href = "https://api.skeylet.com/auth/google"}
+                                    onClick={() => window.location.href = "http://localhost:5001/auth/google"}
                                 >
                                     <Mail className="h-4 w-4" />
                                     Continue with Google
@@ -257,9 +257,9 @@ export function AuthPage({ onLogin }) {
                                 <div className="absolute inset-0 flex items-center">
                                     <Separator />
                                 </div>
-                                <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-white px-2 text-gray-500">
-                                        Or continue with email
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="bg-white border-b px-2 text-gray-700">
+                                        or Continue with Email
                                     </span>
                                 </div>
                             </div>

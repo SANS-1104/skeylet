@@ -20,6 +20,8 @@ export const facebookAuth = (req, res) => {
     "pages_read_user_content",
     "public_profile",
     "email",
+    "instagram_basic",
+    "instagram_content_publish"
   ];
 
   const redirectUrl = `${FACEBOOK_OAUTH_URL}?client_id=${
@@ -68,12 +70,22 @@ export const facebookCallback = async (req, res) => {
     const userAccessToken = longLivedResponse.data.access_token;
 
     // 3️⃣ Fetch managed pages (with name, id, and access_token)
+    // const pagesResponse = await axios.get(
+    //   "https://graph.facebook.com/v23.0/me/accounts?fields=id,name,access_token",
+    //   {
+    //     headers: { Authorization: `Bearer ${userAccessToken}` },
+    //   }
+    // );
     const pagesResponse = await axios.get(
-      "https://graph.facebook.com/v23.0/me/accounts?fields=id,name,access_token",
+      "https://graph.facebook.com/v23.0/me/accounts",
       {
+        params: {
+          fields: "id,name,access_token,instagram_business_account",
+        },
         headers: { Authorization: `Bearer ${userAccessToken}` },
       }
     );
+
 
     const pages = pagesResponse.data.data || [];
     if (!pages.length) {
@@ -81,11 +93,27 @@ export const facebookCallback = async (req, res) => {
     }
 
     // ✅ Format and save page info (no extra API calls)
+    // const formattedPages = pages.map((p) => ({
+    //   pageId: p.id,
+    //   pageName: p.name,
+    //   accessToken: p.access_token,
+    // }));
+
     const formattedPages = pages.map((p) => ({
       pageId: p.id,
       pageName: p.name,
       accessToken: p.access_token,
+
+      instagram: p.instagram_business_account
+        ? {
+          igBusinessId: p.instagram_business_account.id,
+          connected: true,
+        }
+        : {
+          connected: false,
+        },
     }));
+
 
     // 4️⃣ Save to MongoDB
     const user = await User.findById(userId);
@@ -97,7 +125,7 @@ export const facebookCallback = async (req, res) => {
     await user.save();
 
     console.log(`✅ Facebook connected with ${formattedPages.length} pages for user: ${user.email}`);
-    res.redirect("https://skeylet.com/integrations?facebook=connected");
+    res.redirect("http://localhost:3000/integrations?facebook=connected");
   } catch (err) {
     console.error("❌ Facebook Auth Error:", err.response?.data || err.message);
     res.status(500).json({ error: "Facebook authentication failed" });
@@ -162,4 +190,23 @@ export const updateFacebookPreferences = async (req, res) => {
     console.error("❌ Error updating Facebook preferences:", error);
     res.status(500).json({ error: "Failed to update Facebook preferences" });
   }
+};
+
+export const updateInstagramPreferences = async (req, res) => {
+  const { autoPostInstagram } = req.body;
+
+  if (typeof autoPostInstagram !== "boolean") {
+    return res.status(400).json({ error: "Invalid value" });
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { autoPostInstagram },
+    { new: true }
+  );
+
+  res.json({
+    success: true,
+    autoPostInstagram: user.autoPostInstagram,
+  });
 };

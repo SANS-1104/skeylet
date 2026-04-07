@@ -10,64 +10,72 @@ export function StatsSection() {
   ];
 
   return (
-    <section className="py-20 px-4 relative">
-      {/* Animated Background Lines */}
-      <motion.div
-        animate={{
-          backgroundPosition: ["0px 0px", "100px 100px"],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage: "repeating-linear-gradient(45deg, #8b5cf6 0, #8b5cf6 1px, transparent 0, transparent 50%)",
-          backgroundSize: "10px 10px",
-        }}
-      />
+  <section className="py-20 px-4 relative">
+    
+    {/* Animated Background */}
+    <motion.div
+      animate={{ backgroundPosition: ["0px 0px", "100px 100px"] }}
+      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      className="absolute inset-0 opacity-5"
+      style={{
+        backgroundImage:
+          "repeating-linear-gradient(45deg, #8b5cf6 0, #8b5cf6 1px, transparent 0, transparent 50%)",
+        backgroundSize: "10px 10px",
+      }}
+    />
 
-      <div className="container mx-auto max-w-6xl relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {stats.map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              whileHover={{ y: -15, scale: 1.05 }}
-              className="relative group"
+    <div className="container mx-auto max-w-6xl relative z-10">
+      
+      {/* Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-stretch">
+        
+        {stats.map((stat, index) => (
+          
+          <motion.div
+            key={stat.label}
+            className="relative group h-full"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            whileHover={{ y: -15, scale: 1.05 }}
+          >
+            
+            <div
+              className="relative bg-gradient-to-br from-slate-900 to-slate-800 
+              border border-slate-700 rounded-2xl p-6 backdrop-blur-sm 
+              overflow-hidden h-full flex flex-col justify-between"
             >
-              <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-2xl p-6 backdrop-blur-sm overflow-hidden">
-                {/* Animated Gradient Overlay */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 0.15 }}
-                  transition={{ duration: 0.3 }}
-                  className={`absolute inset-0 bg-gradient-to-br ${stat.color}`}
-                />
+
+              {/* Gradient Overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileHover={{ opacity: 0.15 }}
+                transition={{ duration: 0.3 }}
+                className={`absolute inset-0 bg-gradient-to-br ${stat.color}`}
+              />
+
+              {/* Glow */}
+              <motion.div
+                animate={{
+                  opacity: [0, 0.3, 0],
+                  scale: [0.8, 1.2, 0.8],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  delay: index * 0.5,
+                }}
+                className={`absolute inset-0 bg-gradient-to-br ${stat.color} blur-xl`}
+              />
+
+              {/* Content */}
+              <div className="relative z-10 flex flex-col h-full">
                 
-                {/* Pulsing Glow Effect */}
-                <motion.div
-                  animate={{
-                    opacity: [0, 0.3, 0],
-                    scale: [0.8, 1.2, 0.8],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    delay: index * 0.5,
-                  }}
-                  className={`absolute inset-0 bg-gradient-to-br ${stat.color} blur-xl`}
-                />
-                
-                <div className="relative z-10">
+                {/* Top */}
+                <div>
                   <motion.div
-                    animate={{
-                      rotate: [0, 360],
-                    }}
+                    animate={{ rotate: [0, 360] }}
                     transition={{
                       duration: 20,
                       repeat: Infinity,
@@ -78,28 +86,26 @@ export function StatsSection() {
                       rotate: [0, -180, -360],
                       transition: { duration: 0.6 },
                     }}
-                    className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-4 shadow-lg relative`}
+                    className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} 
+                    flex items-center justify-center mb-4 shadow-lg relative`}
                   >
                     <motion.div
                       animate={{
                         scale: [1, 1.3, 1],
                         opacity: [0.3, 0, 0.3],
                       }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
                       className={`absolute inset-0 rounded-xl bg-gradient-to-br ${stat.color}`}
                     />
                     <stat.icon className="w-6 h-6 text-white relative z-10" />
                   </motion.div>
-                  
+
                   <motion.div
                     initial={{ opacity: 0, scale: 0.5 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
-                    transition={{ 
-                      duration: 0.5, 
+                    transition={{
+                      duration: 0.5,
                       delay: 0.2 + index * 0.1,
                       type: "spring",
                       stiffness: 200,
@@ -108,42 +114,44 @@ export function StatsSection() {
                   >
                     {stat.value}
                   </motion.div>
-                  
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.4 + index * 0.1 }}
-                    className="text-slate-400 text-sm"
-                  >
-                    {stat.label}
-                  </motion.div>
                 </div>
 
-                {/* Particle Effect on Hover */}
-                {[...Array(6)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0 }}
-                    whileHover={{
-                      opacity: [0, 1, 0],
-                      scale: [0, 1, 0],
-                      x: [0, (i % 2 ? 20 : -20) * Math.cos(i * 60)],
-                      y: [0, (i % 2 ? 20 : -20) * Math.sin(i * 60)],
-                    }}
-                    transition={{ duration: 0.6, delay: i * 0.05 }}
-                    className={`absolute w-1 h-1 rounded-full bg-gradient-to-r ${stat.color}`}
-                    style={{
-                      left: "50%",
-                      top: "50%",
-                    }}
-                  />
-                ))}
+                {/* Bottom (aligned across all cards) */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4 + index * 0.1 }}
+                  className="text-slate-400 text-sm mt-4"
+                >
+                  {stat.label}
+                </motion.div>
+
               </div>
-            </motion.div>
-          ))}
-        </div>
+
+              {/* Particle Effect */}
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0 }}
+                  whileHover={{
+                    opacity: [0, 1, 0],
+                    scale: [0, 1, 0],
+                    x: [0, (i % 2 ? 20 : -20) * Math.cos(i * 60)],
+                    y: [0, (i % 2 ? 20 : -20) * Math.sin(i * 60)],
+                  }}
+                  transition={{ duration: 0.6, delay: i * 0.05 }}
+                  className={`absolute w-1 h-1 rounded-full bg-gradient-to-r ${stat.color}`}
+                  style={{ left: "50%", top: "50%" }}
+                />
+              ))}
+
+            </div>
+          </motion.div>
+        ))}
+
       </div>
-    </section>
-  );
+    </div>
+  </section>
+);
 }

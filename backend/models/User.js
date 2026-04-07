@@ -36,16 +36,22 @@ const UserSchema = new Schema(
         pageId: { type: String },
         pageName: { type: String },
         accessToken: { type: String },
+        instagram: {
+          igBusinessId: String,
+          connected: Boolean,
+        },
       },
+
     ],
     autoPostFacebook: { type: Boolean, default: false },
     facebookRefreshToken: { type: String },
     facebookUserAccessToken: { type: String },
 
     // Instagram Integration Fields
-    instagramBusinessAccountId: { type: String },
-    instagramAccessToken: { type: String },
-    autoPostInstagram: { type: Boolean, default: false },
+    autoPostInstagram: {
+      type: Boolean,
+      default: false,
+    },
 
 
     subscriptionPlan: {

@@ -307,14 +307,18 @@ export const manualPost = async (req, res) => {
     }
 
     // ---------- Instagram ----------
-    if (platform === "instagram") {
-      if (!user.instagramAccessToken || !user.instagramBusinessAccountId) {
-        return res.status(400).json({ error: "Instagram not connected" });
-      }
+    if (platform === "instagram" && user.autoPostInstagram) {
+      const page = user.facebookPages.find(
+        (p) => p.instagram?.connected
+      );
 
-      result = await postToInstagram(user, {
-        content: post.content,
-        image: post.image, // Must be a public URL!
+      if (!page) throw new Error("Instagram not connected");
+
+      await postToInstagram({
+        igBusinessId: page.instagram.igBusinessId,
+        accessToken: page.accessToken,
+        caption: content,
+        imageUrl,
       });
     }
 

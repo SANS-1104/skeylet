@@ -41,7 +41,7 @@ export function FinalCTASection({ onScrollToPricing }) {
             Start scheduling smarter today.
           </h2>
           <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-            Join thousands of professionals who've transformed their LinkedIn presence. 
+            Join 10,000+ professionals who've transformed their LinkedIn presence. 
             No credit card required to get started.
           </p>
           

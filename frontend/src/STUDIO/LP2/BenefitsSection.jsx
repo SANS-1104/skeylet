@@ -69,7 +69,7 @@ export function BenefitsSection() {
             Why Choose Skeylet
           </h2>
           <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-            Join thousands transforming their social media presence
+            Join 10,000+ transforming their social media presence
           </p>
         </motion.div>
 

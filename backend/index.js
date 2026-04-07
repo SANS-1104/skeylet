@@ -32,7 +32,7 @@ import redditRoutes from "./routes/redditRoutes.js";
 import unifiedRoutes from "./routes/unifiedPost.js";
 import googleAuthRoutes from "./routes/googleAuth.js";
 import facebookRoutes from "./routes/facebookRoutes.js";
-
+import instagramRoutes from "./routes/instagramRoutes.js";
 import variantPayRoutes from "./routes/variantPay.js";
 
 const app = express();
@@ -83,9 +83,10 @@ passport.deserializeUser((obj, done) => done(null, obj));
 
 // -------------------- MIDDLEWARE --------------------
 app.use(express.json({ limit: "40mb" }));
+app.use(express.json());  
 app.use(express.urlencoded({ extended: true, limit: "40mb" }));
 app.use(cors({
-  origin: ["https://skeylet.com", "https://www.skeylet.com","https://localhost:3000"], // 🔹 live frontend
+  origin: ["http://localhost:3000", "https://www.skeylet.com","https://localhost:3000"], // 🔹 live frontend
   credentials: true,
 }));
 // ----------------------------------------------------------
@@ -106,6 +107,7 @@ app.use("/api/blog", postRoutes);
 app.use("/api/linkedin", authRoutes);
 app.use("/api/reddit", redditRoutes);
 app.use("/api/facebook", facebookRoutes);
+app.use("/api/instagram", instagramRoutes);
 app.use("/api/schedule", scheduleRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/plans", planRoutes);

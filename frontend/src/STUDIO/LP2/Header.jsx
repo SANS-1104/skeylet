@@ -111,7 +111,7 @@ export function Header({onScrollToPricing}) {
                 className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/30"
                 onClick={handleLogin}
             >
-              LogIn/ Signup
+              Get Started
             </Button>
           </motion.div>
           {/* <Button variant="ghost" size="icon" className="md:hidden text-white">

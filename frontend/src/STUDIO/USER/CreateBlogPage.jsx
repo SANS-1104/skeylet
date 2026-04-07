@@ -720,8 +720,8 @@ useEffect(() => {
           {/* Topic Section */}
           <Card className="bg-gradient-to-br from-white to-blue-50/30 border-0 shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Type className="h-4 w-4 text-blue-600" />
+              <CardTitle className="flex items-center gap-2 text-xl lg:text-2xl font-semibold">
+                <Type className="h-5 w-5 text-blue-600" />
                 Topic & Content
               </CardTitle>
             </CardHeader>
@@ -810,17 +810,21 @@ useEffect(() => {
                     setContent(e.target.value);
                     setGeneratedByAI(false); // user edited, so allow manual draft saving again
                   }}
-                  className="min-h-48 resize-none text-lg lg:text-2xl"
+                  className="min-h-48 resize-none text-base lg:text-lg leading-relaxed focus-visible:ring-2 focus-visible:ring-blue-500"
                 />
                 <div className="flex flex-wrap gap-2 justify-between text-sm text-muted-foreground">
-                  <span>{content.length} characters</span>
                   <span>
-                    Recommended: 150-300 characters for optimal engagement
+                    {content.trim() === ""
+                      ? 0
+                      : content.trim().split(/\s+/).length} words
+                  </span>
+                  <span>
+                    Recommended: 100-150 words for optimal engagement
                   </span>
                 </div>
               </div>
 
-              {/* Language & Tone */}
+              { }
               <div className="flex flex-row flex-wrap gap-8 mt-4">
                 <div className="space-y-2 w-full lg:w-48">
                   <Label htmlFor="language">Language</Label>
@@ -1122,7 +1126,7 @@ useEffect(() => {
                 />
               </div>
 
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label htmlFor="auto-post">Auto-post to Instagram</Label>
                 </div>
@@ -1131,7 +1135,7 @@ useEffect(() => {
                   checked={linkedinAutoPost}
                   onCheckedChange={handleInstagramAutoPostToggle}
                 />
-              </div>
+              </div> */}
 
 
               <Separator />
@@ -1216,7 +1220,7 @@ useEffect(() => {
                   Post Now to Facebook
                 </Button>
 
-                <Button
+                {/* <Button
                   className={`w-full gap-2 shadow-lg transition-all duration-300 ${instagramAutoPost
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl"
@@ -1226,7 +1230,7 @@ useEffect(() => {
                 >
                   <Send className="h-4 w-4" />
                   Post Now to Instagram
-                </Button>
+                </Button> */}
 
                 <Button
                   variant="outline"
