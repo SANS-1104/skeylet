@@ -95,7 +95,7 @@ export async function linkedinOAuthCallback(req, res) {
 
     const slugifiedName = updatedUser.name.trim().toLowerCase().replace(/\s+/g, "-");
     console.log("✅ LinkedIn access token and info saved.");
-    res.redirect(`http://localhost:3000/dashboard/${slugifiedName}`);
+    res.redirect(`https://skeylet.com/dashboard/${slugifiedName}`);
   } catch (err) {
     console.error("❌ LinkedIn Callback Error:", err.response?.data || err.message);
     return res.status(403).json({ error: "LinkedIn OAuth failed" });
