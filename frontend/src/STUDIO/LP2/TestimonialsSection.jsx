@@ -106,7 +106,7 @@ export function TestimonialsSection() {
                 />
 
                 {/* Content */}
-                <div className="relative flex flex-col h-full">
+                <div className="relative flex flex-col h-full justify-between">
                   
                   {/* Top Content */}
                   <div>
