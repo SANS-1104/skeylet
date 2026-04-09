@@ -598,7 +598,7 @@ export function PostsPage({ currentPage, onPageChange }) {
                           </div>
                         </div>
                       </div>
-                    )*/}
+                    )*/} 
                   </div>
                 </CardContent>
               </Card>
