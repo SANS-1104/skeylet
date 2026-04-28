@@ -99,6 +99,7 @@ export async function generateBlog(req, res) {
     const {
       topic,
       wordCount,
+      customPrompt,
       language = "english",
       tone = "professional",
       viralityScore = 50,
@@ -127,7 +128,7 @@ export async function generateBlog(req, res) {
     }
 
     // ---------- Generate content ----------
-    const payload = topic ? { topic, wordCount, language, tone, viralityScore } : { language, tone, viralityScore };
+    const payload = topic ? { topic, wordCount, language, tone, viralityScore, ...(customPrompt && { customPrompt }) } : { language, tone, viralityScore };
     const response = await axios.post("https://lavi0105.app.n8n.cloud/webhook/generatePost", payload);
     const blogData = response.data || {};
 

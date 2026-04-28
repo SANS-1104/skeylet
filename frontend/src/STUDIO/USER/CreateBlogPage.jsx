@@ -19,10 +19,11 @@ import { AuthContext } from "../../Navbar/AuthContext"
 export function CreateBlogPage() {
   const [topic, setTopic] = useState("")
   const [content, setContent] = useState("")
+  const [customPrompt, setCustomPrompt] = useState("")
   const [language, setLanguage] = useState("english")
   const [tone, setTone] = useState("Professional")
   const [selectTopic, setSelectTopic] = useState("Technology")
-  const [wordCount, setWordCount] = useState(300)
+  const [wordCount, setWordCount] = useState(120)
   const [postMode, setPostMode] = useState("custom");
   const [image, setImage] = useState(null)
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
@@ -182,6 +183,7 @@ export function CreateBlogPage() {
       content,
       language,
       tone,
+      customPrompt,
       image,
       wordCount,
       viralityScore,
@@ -799,6 +801,21 @@ useEffect(() => {
                 </div>
               )}
 
+              <div className="space-y-2 mt-4">
+                <Label htmlFor="content">Custom Prompt (Optional) </Label>
+                <Textarea
+                  id="content"
+                  placeholder="Write your Custom Prompt..."
+                  value={customPrompt}
+                  onChange={(e) => {
+                    setCustomPrompt(e.target.value);
+                    setGeneratedByAI(false); // user edited, so allow manual draft saving again
+                  }}
+                  className="min-h-48 resize-none text-base lg:text-lg leading-relaxed focus-visible:ring-2 focus-visible:ring-blue-500"
+                />
+              </div>
+
+
               {/* Content Area */}
               <div className="space-y-2 mt-4">
                 <Label htmlFor="content">Content</Label>
@@ -824,7 +841,6 @@ useEffect(() => {
                 </div>
               </div>
 
-              { }
               <div className="flex flex-row flex-wrap gap-8 mt-4">
                 <div className="space-y-2 w-full lg:w-48">
                   <Label htmlFor="language">Language</Label>
@@ -857,7 +873,7 @@ useEffect(() => {
                   </Select>
                 </div>
 
-                <div className="w-full lg:w-48">
+                {/* <div className="w-full lg:w-48">
                   <Label htmlFor="selectTopic">Topic</Label>
                   <Select value={selectTopic} onValueChange={setSelectTopic}>
                     <SelectTrigger className="w-full lg:w-48">
@@ -865,6 +881,7 @@ useEffect(() => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Technology">Technology</SelectItem>
+                      <SelectItem value="Startup">Startup</SelectItem>
                       <SelectItem value="Marketing">Marketing</SelectItem>
                       <SelectItem value="Productivity">Productivity</SelectItem>
                       <SelectItem value="Career">Career</SelectItem>
@@ -872,6 +889,45 @@ useEffect(() => {
                       <SelectItem value="AuthorLeadershipitative">Leadership</SelectItem>
                     </SelectContent>
                   </Select>
+                </div> */}
+
+                <div className="w-full lg:w-48">
+                  <Label htmlFor="selectTopic">Topic Category</Label>
+                  <Select
+                    value={["Technology", "Startup", "Marketing", "Productivity", "Career", "Business", "Leadership"].includes(selectTopic) ? selectTopic : "Custom"}
+                    onValueChange={(value) => {
+                      if (value === "Custom") {
+                        setSelectTopic(""); // Clear it so user can type a new one
+                      } else {
+                        setSelectTopic(value);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-full lg:w-48">
+                      <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Technology">Technology</SelectItem>
+                      <SelectItem value="Startup">Startup</SelectItem>
+                      <SelectItem value="Marketing">Marketing</SelectItem>
+                      <SelectItem value="Productivity">Productivity</SelectItem>
+                      <SelectItem value="Career">Career</SelectItem>
+                      <SelectItem value="Business">Business</SelectItem>
+                      <SelectItem value="Leadership">Leadership</SelectItem>
+                      <Separator />
+                      <SelectItem value="Custom" className="text-blue-600 font-medium">Type Custom...</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Show this input only if the current selectTopic isn't one of the presets */}
+                  {!["Technology", "Startup", "Marketing", "Productivity", "Career", "Business", "Leadership"].includes(selectTopic) && (
+                    <Input
+                      className="mt-2"
+                      placeholder="Enter custom category..."
+                      value={selectTopic}
+                      onChange={(e) => setSelectTopic(e.target.value)}
+                    />
+                  )}
                 </div>
 
                 <div className="w-full lg:w-48">

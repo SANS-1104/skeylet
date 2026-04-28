@@ -86,7 +86,7 @@ app.use(express.json({ limit: "40mb" }));
 app.use(express.json());  
 app.use(express.urlencoded({ extended: true, limit: "40mb" }));
 app.use(cors({
-  origin: ["https://skeylet.com", "https://www.skeylet.com","https://localhost:3000"], // 🔹 live frontend
+  origin: ["https://markvance.in", "https://www.skeylet.com","https://localhost:3000"], // 🔹 live frontend
   credentials: true,
 }));
 // ----------------------------------------------------------
