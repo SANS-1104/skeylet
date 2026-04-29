@@ -9,9 +9,9 @@ export function RefundPolicy() {
       icon: CheckCircle2,
       color: "from-green-500 to-emerald-500",
       content: [
-        "We stand behind the quality of Skeylet. If you're not completely satisfied with your purchase, we offer a full refund within 30 days of your initial purchase.",
+        "We stand behind the quality of Markvance. If you're not completely satisfied with your purchase, we offer a full refund within 30 days of your initial purchase.",
         "This guarantee applies to all new subscriptions, whether monthly or annual plans.",
-        "No questions asked - we want you to be completely happy with your decision to use Skeylet.",
+        "No questions asked - we want you to be completely happy with your decision to use Markvance.",
       ],
     },
     {
@@ -37,7 +37,7 @@ export function RefundPolicy() {
       content: [
         "To request a refund, please follow these steps:",
         "",
-        "1. Email us at skeylet123@gmail.com",
+        "1. Email us at markvance123@gmail.com",
         "2. Include in your email:",
         "   • Your account email address",
         "   • Purchase date and transaction ID",
@@ -93,7 +93,7 @@ export function RefundPolicy() {
       icon: CheckCircle2,
       color: "from-teal-500 to-green-500",
       content: [
-        "Our 14-day free trial allows you to test Skeylet before committing:",
+        "Our 14-day free trial allows you to test Markvance before committing:",
         "• No credit card required for the free trial",
         "• Full access to all features during the trial period",
         "• You can cancel anytime during the trial with no charges",
@@ -121,7 +121,7 @@ export function RefundPolicy() {
       color: "from-red-500 to-orange-500",
       content: [
         "We strongly discourage initiating chargebacks:",
-        "• Please contact us first at skeylet123@gmail.com - we're committed to resolving any issues",
+        "• Please contact us first at markvance123@gmail.com - we're committed to resolving any issues",
         "• Chargebacks initiated without contacting us may result in:",
         "  - Immediate account suspension",
         "  - Loss of access to all data and content",
@@ -140,7 +140,7 @@ export function RefundPolicy() {
         "• Billing errors on our end",
         "• Extenuating circumstances (evaluated case-by-case)",
         "",
-        "Contact us at skeylet123@gmail.com to discuss your specific situation.",
+        "Contact us at markvance123@gmail.com to discuss your specific situation.",
       ],
     },
     {
@@ -170,7 +170,7 @@ export function RefundPolicy() {
       content: [
         "For all refund requests and billing questions:",
         "",
-        "Email: skeylet123@gmail.com",
+        "Email: markvance123@gmail.com",
         "Response time: 24-48 hours",
         "Business hours: Monday-Friday, 9 AM - 6 PM EST",
         "",
@@ -197,7 +197,7 @@ export function RefundPolicy() {
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
               <DollarSign className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl text-white">Skeylet</span>
+            <span className="text-xl text-white">Markvance</span>
           </div>
         </div>
       </motion.header>
@@ -304,7 +304,7 @@ export function RefundPolicy() {
             <Mail className="w-12 h-12 text-purple-400 mx-auto mb-4" />
             <h3 className="text-2xl text-white mb-3">Need a Refund?</h3>
             <p className="text-slate-300 mb-6 max-w-xl mx-auto">
-              We're committed to your satisfaction. If you're not happy with Skeylet, we'll make it right or refund your purchase - no hassle, no questions asked.
+              We're committed to your satisfaction. If you're not happy with Markvance, we'll make it right or refund your purchase - no hassle, no questions asked.
             </p>
 
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -313,7 +313,7 @@ export function RefundPolicy() {
                 className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white px-8 py-6 rounded-xl"
               >
                 <Mail className="mr-2 h-5 w-5" />
-                Request Refund: skeylet123@gmail.com
+                Request Refund: markvance123@gmail.com
               </Button>
             </motion.div>
           </motion.div>

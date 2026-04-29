@@ -3,7 +3,7 @@ import { XCircle } from "lucide-react";
 
 export default function PaymentFailed() {
   useEffect(() => {
-    document.title = "Payment Failed – Skeylet";
+    document.title = "Payment Failed – Markvance";
   }, []);
 
   return (

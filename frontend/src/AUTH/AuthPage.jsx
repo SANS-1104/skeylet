@@ -49,9 +49,7 @@ export function AuthPage({ onLogin }) {
                 });
 
                 const { accessToken, refreshToken, name } = res.data;
-                localStorage.setItem("token", accessToken);
-                localStorage.setItem("refreshToken", refreshToken);
-                login(accessToken,refreshToken, name);
+                login(accessToken, refreshToken, name);
 
                 toast.success("Logged in successfully!", { autoClose: 1000 });
 
@@ -120,7 +118,7 @@ export function AuthPage({ onLogin }) {
                         <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
                             <div className="relative">
                                 <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center shadow-lg">
-                                    <span className="font-bold text-lg">S</span>
+                                    <span className="font-bold text-lg">M</span>
                                 </div>
                                 <div className="absolute -top-1 -right-1 h-4 w-4">
                                     <Sparkles className="h-4 w-4 text-yellow-500" />
@@ -128,7 +126,7 @@ export function AuthPage({ onLogin }) {
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-                                    Skeylet
+                                    Markvance
                                 </h1>
                                 <p className="text-sm text-gray-500">Professional Edition</p>
                             </div>

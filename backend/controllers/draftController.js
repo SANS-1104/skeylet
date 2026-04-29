@@ -42,7 +42,7 @@ export const createDraft = async (req, res) => {
       content,
       topic: topic || "General",
       image,
-      viralityScore: Number(viralityScore) || 0,
+      viralityScore: Number(viralityScore) || 50,
       platforms: {
         linkedin: {
           status: "draft",

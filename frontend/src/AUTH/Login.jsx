@@ -20,12 +20,8 @@ const Login = () => {
       const res = await axiosClient.post("/login", formData);
       const { accessToken, refreshToken, name } = res.data;
 
-      // ✅ Save tokens
-      localStorage.setItem("token", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
-
-      // ✅ Call login context
-      login(accessToken, refreshToken,name);
+      // ✅ Call login context (handles localStorage)
+      login(accessToken, refreshToken, name);
 
       toast.success("Logged In Successfully", {
         autoClose: 1000,

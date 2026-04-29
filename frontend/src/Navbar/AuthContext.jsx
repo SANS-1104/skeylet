@@ -109,13 +109,13 @@ import { toast } from "react-toastify";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("accessToken"));
   const [name, setName] = useState(localStorage.getItem("name") || "");
   const [profile, setProfile] = useState(null);
   const [authLoaded, setAuthLoaded] = useState(false);
 
   const login = (accessToken, refreshToken, name) => {
-    localStorage.setItem("token", accessToken);
+    localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", refreshToken);
     localStorage.setItem("name", name);
     setIsLoggedIn(true);
@@ -123,7 +123,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("name");
     setName("");
@@ -174,11 +174,11 @@ export const AuthProvider = ({ children }) => {
 
   // 🔹 Run syncAuth on load
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (token) syncAuth();
     else setAuthLoaded(true);
 
-    const onStorageChange = () => setIsLoggedIn(!!localStorage.getItem("token"));
+    const onStorageChange = () => setIsLoggedIn(!!localStorage.getItem("accessToken"));
     window.addEventListener("storage", onStorageChange);
     return () => window.removeEventListener("storage", onStorageChange);
   }, []);
@@ -191,6 +191,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         profile,
+        setProfile,
         authLoaded,
       }}
     >

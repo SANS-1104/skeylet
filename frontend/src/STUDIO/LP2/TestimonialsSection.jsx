@@ -11,7 +11,7 @@ export function TestimonialsSection() {
       company: "TechCorp",
       avatar: "SC",
       rating: 5,
-      text: "Skeylet transformed our strategy across all platforms. We've seen 3x engagement growth in just 2 months. The AI content generation is incredibly smart!",
+      text: "Markvance transformed our strategy across all platforms. We've seen 3x engagement growth in just 2 months. The AI content generation is incredibly smart!",
     },
     {
       name: "Marcus Johnson",

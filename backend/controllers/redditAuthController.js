@@ -95,7 +95,7 @@ export const redditCallback = async (req, res) => {
 // Step 3 - Disconnect Reddit
 export const disconnectReddit = async (req, res) => {
   try {
-    await User.findByIdAndUpdate(req.user._id, {
+    await User.findByIdAndUpdate(req.user.id, {
       $unset: {
         redditAccessToken: 1,
         redditRefreshToken: 1,

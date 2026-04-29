@@ -4,13 +4,10 @@ import Post from "../models/Post.js";
 import { postToLinkedIn } from "../utils/postToLinkedIn.js";
 import { postToFacebook } from "../utils/postToFacebook.js";
 import { postToSubreddit, refreshRedditToken } from "../utils/postToReddit.js";
-import { postToInstagram } from "../utils/postToInstagram.js";
 import redditAgenda from "../scheduler/redditAgenda.js";
 import agenda from "../scheduler/agenda.js";
 import facebookAgenda from "../scheduler/facebookAgenda.js";
 
-
-/* 🌐 Create a new post draft (works for all platforms) */
 
 export const createPost = async (req, res) => {
   try {
@@ -34,7 +31,7 @@ export const createPost = async (req, res) => {
     }
 
     let post = postId
-      ? await Post.findOne({ _id: postId, user: req.user._id })
+      ? await Post.findOne({ _id: postId, user: req.user.id })
       : null;
 
     if (postId && !post)
@@ -46,11 +43,11 @@ export const createPost = async (req, res) => {
       content,
       topic: topic || "General",
       image,
-      viralityScore: Number(viralityScore) || 0,
+      viralityScore: Number(viralityScore) || 50,
     };
 
     if (post) Object.assign(post, commonFields);
-    else post = new Post({ user: req.user._id, ...commonFields, platforms: {} });
+    else post = new Post({ user: req.user.id, ...commonFields, platforms: {} });
 
     // ✅ Handle either multiple or single platforms
     if (platforms && typeof platforms === "object") {
@@ -95,116 +92,15 @@ export const createPost = async (req, res) => {
   }
 };
 
-/* 🚀 Manual posting (multi-platform) */
-
-// export const manualPost = async (req, res) => {
-//   try {
-//     const { postId, platform } = req.body;
-//     if (!platform) return res.status(400).json({ error: "Platform is required" });
-
-//     const post = await Post.findOne({ _id: postId, user: req.user._id });
-//     if (!post) return res.status(404).json({ error: "Post not found" });
-
-//     const user = await User.findById(req.user._id);
-//     let result = {};
-
-//     // ---------- LinkedIn ----------
-//     if (platform === "linkedin") {
-//       if (!user.linkedinAccessToken || !user.linkedinPersonURN) {
-//         return res.status(400).json({ error: "LinkedIn not connected" });
-//       }
-
-//       result = await postToLinkedIn(user, {
-//         title: post.title,
-//         content: post.content,
-//         image: post.image,
-//       });
-//     }
-
-//     // ---------- Reddit ----------
-//     if (platform === "reddit") {
-//       if (!user.redditAccessToken) {
-//         return res.status(400).json({ error: "Reddit not connected" });
-//       }
-
-//       const accessToken = (await refreshRedditToken(user)) || user.redditAccessToken;
-//       const redditUsername = user.redditUsername || "UnknownUser";
-//       const redditData = post.platforms.reddit?.extra;
-
-//       if (!redditData?.subreddit) {
-//         return res.status(400).json({ error: "Missing subreddit info" });
-//       }
-
-//       result = await postToSubreddit(
-//         accessToken,
-//         redditUsername,
-//         redditData.subreddit,
-//         post.title,
-//         post.content,
-//         redditData.url,
-//         redditData.flairId
-//       );
-//     }
-
-//     // ---------- Facebook ----------
-//     if (platform === "facebook" || platform === "Facebook") {
-//       if (!user.facebookPages || user.facebookPages.length === 0) {
-//         return res.status(400).json({ error: "No Facebook Pages connected" });
-//       }
-
-//       // Pages selected from frontend
-//       const selectedPages = req.body.selectedPages; // array of pageIds
-//       const pagesToPost = user.facebookPages.filter((p) =>
-//         selectedPages.includes(p.pageId)
-//       );
-
-//       if (!pagesToPost.length)
-//         return res.status(400).json({ error: "No valid pages selected" });
-
-//       result = await postToFacebook(pagesToPost, {
-//         title: post.title,
-//         content: post.content,
-//         image: post.image,
-//       });
-//     }
-
-//     // ---------- Update Post ----------
-//     post.platforms[platform] = {
-//       ...post.platforms[platform],
-//       status: "posted",
-//       postedAt: new Date(),
-//       postId: result?.id || result?.postId || null,
-//       url: result?.url || null,
-//     };
-//     await post.save();
-
-//     user.usageCount += 1;
-//     await user.save();
-
-//     res.json({ success: true, platform, result });
-//   } catch (err) {
-//     console.error("❌ Manual post failed:", err.message);
-//     const { postId, platform } = req.body;
-//     const post = await Post.findById(postId);
-//     if (post && platform) {
-//       post.platforms[platform].status = "failed";
-//       await post.save();
-//     }
-//     res.status(500).json({ error: `Failed to post on ${platform}` });
-//   }
-// };
-
-/* 🚀 Manual posting (multi-platform) with QUOTA CHECK */
-
 export const manualPost = async (req, res) => {
   try {
     const { postId, platform } = req.body;
     if (!platform) return res.status(400).json({ error: "Platform is required" });
 
-    const post = await Post.findOne({ _id: postId, user: req.user._id });
+    const post = await Post.findOne({ _id: postId, user: req.user.id });
     if (!post) return res.status(404).json({ error: "Post not found" });
 
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: "User not found" });
 
     /* -----------------------------------------
@@ -241,10 +137,11 @@ export const manualPost = async (req, res) => {
     /* -----------------------------------------
      🔹 POST TO LINKED PLATFORM
     ------------------------------------------ */
-    const TAGLINE = "~ Powered by Skeylet";
-    const tags = "#skeylet"
+    const TAGLINE = "~ Powered by Markvance";
+    const tags = "#markvance"
 
-    const finalTitle = `${post.title}\n${TAGLINE}\n`;
+    // const finalTitle = `${post.title}\n${TAGLINE}\n`;
+    const finalTitle = `${TAGLINE}\n`;
     const finalContent = `${post.content} ${tags}`
 
     // ---------- LinkedIn ----------
@@ -305,23 +202,7 @@ export const manualPost = async (req, res) => {
         image: post.image,
       });
     }
-
-    // ---------- Instagram ----------
-    if (platform === "instagram" && user.autoPostInstagram) {
-      const page = user.facebookPages.find(
-        (p) => p.instagram?.connected
-      );
-
-      if (!page) throw new Error("Instagram not connected");
-
-      await postToInstagram({
-        igBusinessId: page.instagram.igBusinessId,
-        accessToken: page.accessToken,
-        caption: content,
-        imageUrl,
-      });
-    }
-
+    
 
     /* -----------------------------------------
      🔹 UPDATE POST STATUS
@@ -358,141 +239,6 @@ export const manualPost = async (req, res) => {
   }
 };
 
-
-/* 🕒 Schedule a post (works for all platforms) */
-
-// export const schedulePost = async (req, res) => {
-//   try {
-//     const { postId, platform, scheduledTime } = req.body;
-//     if (!postId || !platform || !scheduledTime) {
-//       return res.status(400).json({ error: "postId, platform, and scheduledTime are required" });
-//     }
-
-//     const post = await Post.findOne({ _id: postId, user: req.user._id });
-//     if (!post) return res.status(404).json({ error: "Post not found" });
-
-//     // Update post status
-//     post.platforms[platform] = {
-//       ...post.platforms[platform],
-//       status: "scheduled",
-//       scheduledTime: new Date(scheduledTime),
-//     };
-//     await post.save();
-
-//     // Schedule Agenda job per platform
-//     if (platform === "linkedin") {
-//       await agenda.schedule(
-//         new Date(scheduledTime),
-//         "linkedin:postScheduled", // ✅ Correct job name
-//         { postId: post._id }
-//       );
-//     }
-
-//     if (platform === "reddit") {
-//       await redditAgenda.schedule(
-//         new Date(scheduledTime),
-//         "reddit:postScheduled", // ✅ Correct job name
-//         { postId: post._id }
-//       );
-//     }
-
-//     res.json({ success: true, message: `Scheduled ${platform} post`, post });
-//   } catch (err) {
-//     console.error("❌ Scheduling failed:", err);
-//     res.status(500).json({ error: "Failed to schedule post" });
-//   }
-// };
-
-// /* ❌ Cancel a scheduled post for a specific platform */
-
-// export const cancelScheduledPost = async (req, res) => {
-//   try {
-//     const { postId, platform } = req.params;
-
-//     const post = await Post.findOne({ _id: postId, user: req.user._id });
-//     if (!post) return res.status(404).json({ error: "Post not found" });
-
-//     if (!platform || !post.platforms[platform]) {
-//       return res.status(400).json({ error: "Invalid or missing platform" });
-//     }
-
-//     // ✅ Reset platform status
-//     post.platforms[platform].status = "draft";
-//     post.platforms[platform].scheduledTime = null;
-//     await post.save();
-
-//     // ✅ Cancel the right Agenda job
-//     if (platform === "linkedin") {
-//       await agenda.cancel({ name: "linkedin:postScheduled", "data.postId": post._id });
-//     } else if (platform === "reddit") {
-//       await redditAgenda.cancel({ name: "reddit:postScheduled", "data.postId": post._id });
-//     } else if (platform === "facebook") {
-//       await agenda.cancel({ name: "facebook:postScheduled", "data.postId": post._id });
-//     }
-
-//     res.json({
-//       success: true,
-//       message: `Cancelled ${platform} schedule and moved to drafts`,
-//       post,
-//     });
-//   } catch (err) {
-//     console.error("❌ Cancel schedule failed:", err);
-//     res.status(500).json({ error: "Failed to cancel scheduled post" });
-//   }
-// };
-
-// /**
-//  * 🔄 Reschedule a post for a specific platform
-//  */
-// export const reschedulePost = async (req, res) => {
-//   try {
-//     const { postId, platform, newScheduledTime } = req.body;
-//     if (!postId || !platform || !newScheduledTime) {
-//       return res.status(400).json({ error: "postId, platform, and newScheduledTime are required" });
-//     }
-
-//     const post = await Post.findOne({ _id: postId, user: req.user._id });
-//     if (!post) return res.status(404).json({ error: "Post not found" });
-
-//     // Cancel previous scheduled job
-//     if (platform === "linkedin") {
-//       await agenda.cancel({ "data.postId": post._id });
-//     } else if (platform === "reddit") {
-//       await redditAgenda.cancel({ "data.postId": post._id });
-//     }
-
-//     // Update post scheduledTime & status
-//     post.platforms[platform] = {
-//       ...post.platforms[platform],
-//       status: "scheduled",
-//       scheduledTime: new Date(newScheduledTime),
-//     };
-//     await post.save();
-
-//     // Schedule new Agenda job
-//     if (platform === "linkedin") {
-//       await agenda.schedule(
-//         new Date(newScheduledTime),
-//         "linkedin:postScheduled",
-//         { postId: post._id }
-//       );
-//     } else if (platform === "reddit") {
-//       await redditAgenda.schedule(
-//         new Date(newScheduledTime),
-//         "reddit:postScheduled",
-//         { postId: post._id }
-//       );
-//     }
-
-//     res.json({ success: true, message: `${platform} post rescheduled`, post });
-//   } catch (err) {
-//     console.error("❌ Reschedule failed:", err);
-//     res.status(500).json({ error: "Failed to reschedule post" });
-//   }
-// };
-
-
-/* 🕒 Schedule a post (works for all platforms, including Facebook) */
 export const schedulePost = async (req, res) => {
   try {
     const { postId, platform, scheduledTime, selectedPages } = req.body; // added selectedPages for FB
@@ -502,7 +248,7 @@ export const schedulePost = async (req, res) => {
         .json({ error: "postId, platform, and scheduledTime are required" });
     }
 
-    const post = await Post.findOne({ _id: postId, user: req.user._id });
+    const post = await Post.findOne({ _id: postId, user: req.user.id });
     if (!post) return res.status(404).json({ error: "Post not found" });
 
     // Update post status
@@ -539,12 +285,11 @@ export const schedulePost = async (req, res) => {
   }
 };
 
-
 export const cancelScheduledPost = async (req, res) => {
   try {
     const { postId, platform } = req.params;
 
-    const post = await Post.findOne({ _id: postId, user: req.user._id });
+    const post = await Post.findOne({ _id: postId, user: req.user.id });
     if (!post) return res.status(404).json({ error: "Post not found" });
 
     if (!platform || !post.platforms[platform]) {
@@ -578,8 +323,6 @@ export const cancelScheduledPost = async (req, res) => {
   }
 };
 
-
-
 export const reschedulePost = async (req, res) => {
   try {
     const { postId, platform, newScheduledTime, selectedPages } = req.body;
@@ -589,7 +332,7 @@ export const reschedulePost = async (req, res) => {
         .json({ error: "postId, platform, and newScheduledTime are required" });
     }
 
-    const post = await Post.findOne({ _id: postId, user: req.user._id });
+    const post = await Post.findOne({ _id: postId, user: req.user.id });
     if (!post) return res.status(404).json({ error: "Post not found" });
 
     // Cancel previous job
@@ -631,13 +374,9 @@ export const reschedulePost = async (req, res) => {
   }
 };
 
-
-/**
- * 📅 Get all posts that are draft or scheduled on any platform
- */
 export const getScheduledPosts = async (req, res) => {
   try {
-    const posts = await Post.find({ user: req.user._id });
+    const posts = await Post.find({ user: req.user.id });
 
     // Include any post where at least one platform is draft or scheduled
     const filtered = posts.filter(post =>

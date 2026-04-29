@@ -49,7 +49,7 @@
 //             </div>
 //             <div>
 //               <span className="font-bold text-lg bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-//                 Skeylet
+//                 Markvance
 //               </span>
 //               <div className="text-xs text-gray-500">Professional Edition</div>
 //             </div>
@@ -193,7 +193,7 @@ export function DashboardHeader({ currentPage, onPageChange }) {
             <div className="relative">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center shadow-lg cursor-pointer">
                 <button onClick={moveToHome}>
-                  <span className="font-bold text-xl">S</span>
+                  <span className="font-bold text-xl">M</span>
                 </button>
               </div>
               <div className="absolute -top-1 -right-1 h-3 w-3">
@@ -203,7 +203,7 @@ export function DashboardHeader({ currentPage, onPageChange }) {
 
             <div className="hidden sm:block">
               <span className="font-bold text-lg bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-                Skeylet
+                Markvance
               </span>
               <div className="text-xs text-gray-500">Professional Edition</div>
             </div>

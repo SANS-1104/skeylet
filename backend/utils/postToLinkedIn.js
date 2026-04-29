@@ -94,7 +94,8 @@ export async function postToLinkedIn(user, { title, content, image }) {
     specificContent: {
       "com.linkedin.ugc.ShareContent": {
         shareCommentary: {
-          text: `${title}\n\n${content}`,
+          // text: `${title}\n\n${content}`,
+          text: `${content}`,
         },
         shareMediaCategory: assetURN ? "IMAGE" : "NONE",
         media: assetURN

@@ -32,18 +32,28 @@ import redditRoutes from "./routes/redditRoutes.js";
 import unifiedRoutes from "./routes/unifiedPost.js";
 import googleAuthRoutes from "./routes/googleAuth.js";
 import facebookRoutes from "./routes/facebookRoutes.js";
-import instagramRoutes from "./routes/instagramRoutes.js";
 import variantPayRoutes from "./routes/variantPay.js";
 
 const app = express();
 
+if (!process.env.SESSION_SECRET) {
+  throw new Error("SESSION_SECRET env var is required");
+}
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET env var is required");
+}
 
 // -------------------- PASSPORT CONFIG --------------------
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "supersecretkey",
+    secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    },
   })
 );
 app.use(passport.initialize());
@@ -107,7 +117,6 @@ app.use("/api/blog", postRoutes);
 app.use("/api/linkedin", authRoutes);
 app.use("/api/reddit", redditRoutes);
 app.use("/api/facebook", facebookRoutes);
-app.use("/api/instagram", instagramRoutes);
 app.use("/api/schedule", scheduleRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/plans", planRoutes);

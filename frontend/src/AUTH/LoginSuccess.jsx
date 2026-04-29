@@ -28,9 +28,7 @@ export default function LoginSuccess() {
     // });
 
     if (accessToken && refreshToken && decodedName) {
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
-      login(accessToken, decodedName);
+      login(accessToken, refreshToken, decodedName);
       toast.success("Logged in with Google!", { autoClose: 1000 });
 
       // ✅ Replace instead of push so we don't trigger this again

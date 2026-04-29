@@ -216,7 +216,7 @@ export async function generateBlog(req, res) {
     }
 
     // ---------- Save post ----------
-    await Post.create({
+    const createdPost = await Post.create({
       user: user._id,
       title,
       content,
@@ -229,7 +229,7 @@ export async function generateBlog(req, res) {
     user.usageCount += 1;
     await user.save();
 
-    res.json({ ...blogData, title, content, image: imageUrl, platforms });
+    res.json({ ...blogData, _id: createdPost._id, postId: createdPost._id, title, content, image: imageUrl, platforms });
   } catch (err) {
     console.error("Blog generation error:", err.response?.data || err.message);
     res.status(500).json({ error: "Blog generation failed" });
@@ -396,7 +396,7 @@ export const updateBlogById = async (req, res) => {
   try {
     const blog = await Post.findById(id);
     if (!blog) return res.status(404).json({ message: "Blog not found" });
-    if (!blog.user.equals(req.user._id)) return res.status(403).json({ message: "Not authorized" });
+    if (!blog.user.equals(req.user.id)) return res.status(403).json({ message: "Not authorized" });
 
     blog.title = title || blog.title;
     blog.content = content || blog.content;
@@ -418,7 +418,7 @@ export const deleteBlogById = async (req, res) => {
   try {
     const blog = await Post.findById(id);
     if (!blog) return res.status(404).json({ message: "Blog not found" });
-    if (!blog.user.equals(req.user._id)) return res.status(403).json({ message: "Not authorized" });
+    if (!blog.user.equals(req.user.id)) return res.status(403).json({ message: "Not authorized" });
 
     await blog.deleteOne();
     res.json({ message: "Blog deleted successfully" });

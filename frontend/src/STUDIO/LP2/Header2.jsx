@@ -62,7 +62,7 @@ export function Header2() {
           >
             <Sparkles className="w-6 h-6 text-white" />
           </motion.div>
-          <span className="text-xl text-white">Skeylet</span>
+          <span className="text-xl text-white">Markvance</span>
         </motion.div>
 
         <motion.nav

@@ -1,7 +1,7 @@
 export const isLoggedIn = () => {
-  return !!localStorage.getItem("token");
+  return !!localStorage.getItem("accessToken");
 };
 
 export const logout = () => {
-  localStorage.removeItem("token");
+  localStorage.removeItem("accessToken");
 };

@@ -20,8 +20,6 @@ export const facebookAuth = (req, res) => {
     "pages_read_user_content",
     "public_profile",
     "email",
-    "instagram_basic",
-    "instagram_content_publish"
   ];
 
   const redirectUrl = `${FACEBOOK_OAUTH_URL}?client_id=${
@@ -80,7 +78,7 @@ export const facebookCallback = async (req, res) => {
       "https://graph.facebook.com/v23.0/me/accounts",
       {
         params: {
-          fields: "id,name,access_token,instagram_business_account",
+          fields: "id,name,access_token",
         },
         headers: { Authorization: `Bearer ${userAccessToken}` },
       }
@@ -103,15 +101,6 @@ export const facebookCallback = async (req, res) => {
       pageId: p.id,
       pageName: p.name,
       accessToken: p.access_token,
-
-      instagram: p.instagram_business_account
-        ? {
-          igBusinessId: p.instagram_business_account.id,
-          connected: true,
-        }
-        : {
-          connected: false,
-        },
     }));
 
 
@@ -134,7 +123,7 @@ export const facebookCallback = async (req, res) => {
 
 export const disconnectFacebook = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     user.facebookPages = [];
@@ -164,7 +153,7 @@ export const getFacebookPages = async (req, res) => {
 
 export const updateFacebookPreferences = async (req, res) => {
   try {
-    const userId = req.user._id; // from authenticateUser middleware
+    const userId = req.user.id; // from authenticateUser middleware
     const { autoPostFacebook } = req.body;
 
     if (typeof autoPostFacebook !== "boolean") {
@@ -192,21 +181,3 @@ export const updateFacebookPreferences = async (req, res) => {
   }
 };
 
-export const updateInstagramPreferences = async (req, res) => {
-  const { autoPostInstagram } = req.body;
-
-  if (typeof autoPostInstagram !== "boolean") {
-    return res.status(400).json({ error: "Invalid value" });
-  }
-
-  const user = await User.findByIdAndUpdate(
-    req.user._id,
-    { autoPostInstagram },
-    { new: true }
-  );
-
-  res.json({
-    success: true,
-    autoPostInstagram: user.autoPostInstagram,
-  });
-};

@@ -92,7 +92,7 @@ export function ProfilePage() {
 
 
   const handlePlatformConnect = (selectedPlatform) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       toast.error("You must be logged in.");
       return;
@@ -114,7 +114,7 @@ export function ProfilePage() {
   };
 
   const disConnect = async (platform) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       toast.error("You must be logged in.");
       return;
@@ -135,7 +135,7 @@ export function ProfilePage() {
   };
 
   const handleReconnect = async (platform) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       toast.error("You must be logged in.");
       return;
@@ -228,7 +228,7 @@ export function ProfilePage() {
 
   useEffect(() => {
     const fetchLinkedInData = async () => {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       if (!token) return;
 
       try {

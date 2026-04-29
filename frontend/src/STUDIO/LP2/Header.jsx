@@ -70,7 +70,7 @@ export function Header({onScrollToPricing}) {
           >
             <Sparkles className="w-6 h-6 text-white" />
           </motion.div>
-          <span className="text-3xl lg:text-2xl text-white">Skeylet</span>
+          <span className="text-3xl lg:text-2xl text-white">Markvance</span>
         </motion.div>
 
         {/* Centered Nav Links */}

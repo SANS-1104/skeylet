@@ -53,8 +53,14 @@ function App() {
         <Route path="/payment-status" element={<PaymentStatusPage />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-failed" element={<PaymentFailed />} />
-        {/* <Route path="/dashboard/:name" element={<PrivateRoute><Dashboard /></PrivateRoute>} /> */}
-        <Route path="/dashboard/:name" element={<Dashboard />} />
+        <Route
+          path="/dashboard/:name"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
         <Route path="/studioSuperAdmin" element={<StudioSuperAdminLoginPage />} />
 
         <Route

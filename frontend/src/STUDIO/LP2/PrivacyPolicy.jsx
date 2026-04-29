@@ -7,13 +7,13 @@ export function PrivacyPolicy() {
     {
       title: "Information We Collect",
       content: [
-        "When you use Skeylet, we collect information that you provide directly to us, including:",
+        "When you use Markvance, we collect information that you provide directly to us, including:",
         "• Account information (name, email address, password)",
         "• Social media account connections and credentials (stored securely)",
         "• Content you create, schedule, and publish through our platform",
         "• Usage data and analytics about how you interact with our service",
         "• Payment information (processed securely through third-party payment processors)",
-        "• Communications between you and Skeylet support",
+        "• Communications between you and Markvance support",
       ],
     },
     {
@@ -37,7 +37,7 @@ export function PrivacyPolicy() {
         "• With social media platforms (LinkedIn, Reddit, Facebook) when you authorize us to publish content on your behalf",
         "• With service providers who perform services on our behalf (hosting, analytics, customer support)",
         "• When required by law or to respond to legal processes",
-        "• To protect the rights, property, and safety of Skeylet, our users, or the public",
+        "• To protect the rights, property, and safety of Markvance, our users, or the public",
         "• In connection with a merger, acquisition, or sale of assets (with notice to you)",
       ],
     },
@@ -63,7 +63,7 @@ export function PrivacyPolicy() {
         "• Disconnect social media accounts at any time",
         "• Request a copy of your data",
         "• Close your account and delete all associated data",
-        "To exercise these rights, contact us at skeylet123@gmail.com",
+        "To exercise these rights, contact us at markvance123@gmail.com",
       ],
     },
     {
@@ -100,13 +100,13 @@ export function PrivacyPolicy() {
     {
       title: "Children's Privacy",
       content: [
-        "Skeylet is not intended for users under 18 years of age. We do not knowingly collect information from children under 18. If you believe we have collected information from a child, please contact us immediately at skeylet123@gmail.com.",
+        "Markvance is not intended for users under 18 years of age. We do not knowingly collect information from children under 18. If you believe we have collected information from a child, please contact us immediately at markvance123@gmail.com.",
       ],
     },
     {
       title: "International Users",
       content: [
-        "If you are accessing Skeylet from outside the United States, please be aware that your information may be transferred to, stored, and processed in the United States. By using our service, you consent to this transfer.",
+        "If you are accessing Markvance from outside the United States, please be aware that your information may be transferred to, stored, and processed in the United States. By using our service, you consent to this transfer.",
       ],
     },
     {
@@ -116,14 +116,14 @@ export function PrivacyPolicy() {
         "• Posting the new policy on this page",
         "• Updating the 'Last Updated' date",
         "• Sending an email notification (for significant changes)",
-        "Your continued use of Skeylet after changes become effective constitutes acceptance of the updated policy.",
+        "Your continued use of Markvance after changes become effective constitutes acceptance of the updated policy.",
       ],
     },
     {
       title: "Contact Us",
       content: [
         "If you have questions or concerns about this Privacy Policy, please contact us:",
-        "• Email: skeylet123@gmail.com",
+        "• Email: markvance123@gmail.com",
         "• We aim to respond to all inquiries within 48 hours",
       ],
     },
@@ -147,7 +147,7 @@ export function PrivacyPolicy() {
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
               <Shield className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl text-white">Skeylet</span>
+            <span className="text-xl text-white">Markvance</span>
           </div>
         </div>
       </motion.header>
@@ -191,7 +191,7 @@ export function PrivacyPolicy() {
               Last Updated: November 14, 2025
             </p>
             <p className="text-slate-300 max-w-2xl mx-auto">
-              At Skeylet, we take your privacy seriously. This policy explains how we collect, use, and protect your personal information.
+              At Markvance, we take your privacy seriously. This policy explains how we collect, use, and protect your personal information.
             </p>
           </motion.div>
         </div>
@@ -247,7 +247,7 @@ export function PrivacyPolicy() {
                 className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white px-8 py-6 rounded-xl"
               >
                 <Mail className="mr-2 h-5 w-5" />
-                Contact Us: skeylet123@gmail.com
+                Contact Us: markvance123@gmail.com
               </Button>
             </motion.div>
           </motion.div>

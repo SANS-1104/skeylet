@@ -3,7 +3,7 @@ import User from "../models/User.js";
 
 export const checkQuota = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id).populate("subscriptionPlan");
+    const user = await User.findById(req.user.id).populate("subscriptionPlan");
 
     if (!user) return res.status(404).json({ msg: "User not found" });
 

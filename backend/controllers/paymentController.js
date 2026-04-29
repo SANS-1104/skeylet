@@ -64,7 +64,7 @@ import User from "../models/User.js";
 
 export const getPaymentStatus = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate("subscriptionPlan");
+    const user = await User.findById(req.user.id).populate("subscriptionPlan");
     if (!user) return res.status(404).json({ message: "User not found" });
 
     res.json({

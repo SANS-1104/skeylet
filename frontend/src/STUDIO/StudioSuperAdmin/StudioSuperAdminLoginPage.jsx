@@ -40,7 +40,7 @@ export function StudioSuperAdminLoginPage({ onAdminLogin }) {
             // Axios automatically parses JSON
             const data = res.data;
 
-            localStorage.setItem("accessToken", data.token);
+            localStorage.setItem("superadmin_token", data.token);
             navigate("/studioSuperAdmin/dashboard");
         } catch (err) {
             setError(

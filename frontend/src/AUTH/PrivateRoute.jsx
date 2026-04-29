@@ -4,9 +4,11 @@ import { AuthContext } from "../Navbar/AuthContext";
 
 
 const PrivateRoute = ({ children }) => {
-  const { isLoggedIn } = useContext(AuthContext);
+  const { isLoggedIn, authLoaded } = useContext(AuthContext);
 
-  return isLoggedIn ? children : <Navigate to="/auth" />;
+  if (!authLoaded) return null;
+
+  return isLoggedIn ? children : <Navigate to="/auth" replace />;
 };
 
 export default PrivateRoute;

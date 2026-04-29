@@ -14,14 +14,18 @@ const axiosClient = axios.create({
 axiosClient.interceptors.request.use(
   (config) => {
     const publicRoutes = ["/login", "/signup", "/auth/refresh-token", "/auth"];
-    const token = localStorage.getItem("accessToken"); // ✅ fixed key
-
-    // console.log("📦 AxiosClient request to:", config.url);
-    // console.log("🔑 Token from localStorage:", token);
 
     if (publicRoutes.some(route => config.url.includes(route))) {
       return config; // Skip token for public routes
     }
+
+    // SuperAdmin routes use a separate token to keep regular-user and
+    // superadmin sessions isolated.
+    const isSuperAdminRoute =
+      config.url.includes("/studioAdmin") || config.url.includes("/admin/superadmin");
+    const token = isSuperAdminRoute
+      ? localStorage.getItem("superadmin_token")
+      : localStorage.getItem("accessToken");
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -58,7 +62,9 @@ axiosClient.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return axiosClient(originalRequest);
         } catch (refreshErr) {
-          localStorage.clear();
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("name");
           window.location.href = "/auth";
         }
       } else {

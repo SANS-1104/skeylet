@@ -17,7 +17,7 @@ export const createRedditDraft = async (req, res) => {
     }
 
     const post = await Post.create({
-      user: req.user._id,
+      user: req.user.id,
       title,
       content,
       viralityScore: Number(viralityScore) || 0,
@@ -48,7 +48,7 @@ export const scheduleRedditPost = async (req, res) => {
   try {
     const { scheduledTime } = req.body;
 
-    const post = await Post.findOne({ _id: req.params.id, user: req.user._id });
+    const post = await Post.findOne({ _id: req.params.id, user: req.user.id });
     if (!post) return res.status(404).json({ error: "Post not found" });
 
     post.platforms.reddit = {
@@ -71,13 +71,13 @@ export const scheduleRedditPost = async (req, res) => {
 export const manualRedditPost = async (req, res) => {
   try {
     const { postId } = req.body;
-    const post = await Post.findOne({ _id: postId, user: req.user._id });
+    const post = await Post.findOne({ _id: postId, user: req.user.id });
     if (!post) return res.status(404).json({ error: "Post not found" });
 
     const redditData = post.platforms.reddit?.extra;
     if (!redditData?.subreddit) return res.status(400).json({ error: "Missing subreddit info" });
 
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user.id);
     if (!user?.redditAccessToken) return res.status(400).json({ error: "User not connected to Reddit" });
 
     const accessToken = (await refreshRedditToken(user)) || user.redditAccessToken;
@@ -115,7 +115,7 @@ export const manualRedditPost = async (req, res) => {
 -------------------------------------------------------- */
 export const moveRedditToDraft = async (req, res) => {
   try {
-    const post = await Post.findOne({ _id: req.params.id, user: req.user._id });
+    const post = await Post.findOne({ _id: req.params.id, user: req.user.id });
     if (!post) return res.status(404).json({ error: "Post not found" });
 
     post.platforms.reddit = {
@@ -137,7 +137,7 @@ export const moveRedditToDraft = async (req, res) => {
 -------------------------------------------------------- */
 export const getUserSubreddits = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user.id);
     if (!user?.redditAccessToken)
       return res.status(400).json({ error: "User not connected to Reddit" });
 
@@ -193,7 +193,7 @@ export const fetchSubredditFlairs = async (req, res) => {
   if (!subreddit) return res.status(400).json({ error: "Missing subreddit" });
 
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user.id);
     if (!user?.redditAccessToken)
       return res.status(400).json({ error: "User not connected to Reddit" });
 

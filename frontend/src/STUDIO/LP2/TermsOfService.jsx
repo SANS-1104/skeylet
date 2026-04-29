@@ -20,8 +20,8 @@ export function TermsOfService() {
       icon: CheckCircle2,
       color: "from-green-500 to-emerald-500",
       content: [
-        "By accessing or using Skeylet ('the Service'), you agree to be bound by these Terms of Service ('Terms'). If you do not agree to these Terms, you may not use the Service.",
-        "These Terms constitute a legally binding agreement between you and Skeylet. By creating an account, you acknowledge that you have read, understood, and agree to be bound by these Terms.",
+        "By accessing or using Markvance ('the Service'), you agree to be bound by these Terms of Service ('Terms'). If you do not agree to these Terms, you may not use the Service.",
+        "These Terms constitute a legally binding agreement between you and Markvance. By creating an account, you acknowledge that you have read, understood, and agree to be bound by these Terms.",
         "We reserve the right to update these Terms at any time. Continued use of the Service after changes constitutes acceptance of the updated Terms.",
       ],
     },
@@ -31,7 +31,7 @@ export function TermsOfService() {
       icon: Users,
       color: "from-blue-500 to-cyan-500",
       content: [
-        "You must be at least 18 years old to use Skeylet.",
+        "You must be at least 18 years old to use Markvance.",
         "You must provide accurate and complete information during registration.",
         "You must have the legal capacity to enter into binding contracts.",
         "You represent that all information you provide is truthful and accurate.",
@@ -45,14 +45,14 @@ export function TermsOfService() {
       color: "from-purple-500 to-pink-500",
       content: [
         "Account Creation:",
-        "• You must create an account to use Skeylet",
+        "• You must create an account to use Markvance",
         "• You are responsible for maintaining the security of your account credentials",
         "• You must not share your account with others",
         "• You are responsible for all activities under your account",
         "",
         "Security:",
         "• Use a strong, unique password",
-        "• Notify us immediately at skeylet123@gmail.com of any unauthorized access",
+        "• Notify us immediately at markvance123@gmail.com of any unauthorized access",
         "• We are not liable for losses due to unauthorized account access",
         "• You must not attempt to gain unauthorized access to other accounts or systems",
       ],
@@ -80,7 +80,7 @@ export function TermsOfService() {
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
               <FileText className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl text-white">Skeylet</span>
+            <span className="text-xl text-white">Markvance</span>
           </div>
         </div>
       </motion.header>
@@ -114,7 +114,7 @@ export function TermsOfService() {
             <p className="text-xl text-slate-400 mb-4">Last Updated: November 14, 2025</p>
 
             <p className="text-slate-300 max-w-2xl mx-auto">
-              Please read these terms carefully before using Skeylet. By using our service, you agree to be bound by these terms.
+              Please read these terms carefully before using Markvance. By using our service, you agree to be bound by these terms.
             </p>
           </motion.div>
         </div>
@@ -180,7 +180,7 @@ export function TermsOfService() {
               <div>
                 <h3 className="text-xl text-amber-300 mb-3">Important Notice</h3>
                 <p className="text-slate-300 leading-relaxed mb-4">
-                  By using Skeylet, you acknowledge that you agree to these Terms of Service, our Privacy Policy, and Refund Policy.
+                  By using Markvance, you acknowledge that you agree to these Terms of Service, our Privacy Policy, and Refund Policy.
                 </p>
                 <p className="text-slate-400 text-sm">
                   These Terms may be updated from time to time. Continued use after updates constitutes acceptance.
@@ -204,7 +204,7 @@ export function TermsOfService() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-8 py-6 rounded-xl">
                 <Mail className="mr-2 h-5 w-5" />
-                Contact Us: skeylet123@gmail.com
+                Contact Us: markvance123@gmail.com
               </Button>
             </motion.div>
           </motion.div>

@@ -28,8 +28,7 @@ export default function StudioSuperAdminSidebar({ onSelect, activeTab }) {
     setIsOpen(false);
   };
   const logout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken"); // if exists
+    localStorage.removeItem("superadmin_token");
     navigate("/");
   };
 
@@ -67,7 +66,7 @@ export default function StudioSuperAdminSidebar({ onSelect, activeTab }) {
                 <span className="text-white font-bold text-xl">S</span>
               </div>
               <div>
-                <span className="text-xl font-bold text-gray-800">Skeylet</span>
+                <span className="text-xl font-bold text-gray-800">Markvance</span>
                 <p className="text-xs text-gray-600 font-medium">Studio Admin Panel</p>
               </div>
             </div>

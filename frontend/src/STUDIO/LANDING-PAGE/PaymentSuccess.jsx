@@ -3,7 +3,7 @@ import { CheckCircle } from "lucide-react";
 
 export default function PaymentSuccess() {
   useEffect(() => {
-    document.title = "Payment Successful – Skeylet";
+    document.title = "Payment Successful – Markvance";
   }, []);
 
   return (

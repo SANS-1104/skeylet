@@ -66,7 +66,7 @@ export function BenefitsSection() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl text-white mb-4">
-            Why Choose Skeylet
+            Why Choose Markvance
           </h2>
           <p className="text-xl text-slate-400 max-w-2xl mx-auto">
             Join 10,000+ transforming their social media presence

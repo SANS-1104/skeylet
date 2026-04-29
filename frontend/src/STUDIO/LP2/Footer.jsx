@@ -60,7 +60,7 @@ export function Footer() {
               >
                 <Sparkles className="w-6 h-6 text-white" />
               </motion.div>
-              <span className="text-xl">Skeylet</span>
+              <span className="text-xl">Markvance</span>
             </motion.div>
             <p className="text-slate-400 text-sm mb-6 leading-relaxed">
               Automate your social media across all major platforms with AI-powered content creation.
@@ -112,7 +112,7 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-slate-400 text-sm">© 2025 Skeylet. All rights reserved.</p>
+          <p className="text-slate-400 text-sm">© 2025 Markvance. All rights reserved.</p>
           <div className="flex gap-6 text-sm text-slate-400">
             <motion.a
               onClick={() => navigate("/privacy")}
