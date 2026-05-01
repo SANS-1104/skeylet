@@ -25,7 +25,7 @@ router.get(
     //   console.log("✅ Passport returned user:", user);
 
       if (!user) {
-        return res.redirect("https://markvance.in/auth?error=NoUser");
+        return res.redirect("https://skeylet.com/auth?error=NoUser");
       }
 
       // ✅ Create tokens exactly like /login route
@@ -46,7 +46,7 @@ router.get(
       const name = encodeURIComponent(user.name || "user");
 
       // 🔍 Log the final redirect URL for debugging
-      const redirectUrl = `https://markvance.in/login-success?accessToken=${encodeURIComponent(
+      const redirectUrl = `https://skeylet.com/login-success?accessToken=${encodeURIComponent(
         accessToken
       )}&refreshToken=${encodeURIComponent(refreshToken)}&name=${name}`;
 
@@ -57,7 +57,7 @@ router.get(
 
     } catch (err) {
       console.error("Google login error:", err);
-      res.redirect("https://markvance.in/auth?error=ServerError");
+      res.redirect("https://skeylet.com/auth?error=ServerError");
     }
   }
 );

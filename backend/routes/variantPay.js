@@ -109,9 +109,9 @@ router.post("/create-payment", async (req, res) => {
       card_cvv: "359",
       card_holder_name: name || "Test User",
       purpose_message: "Skeylet Subscription",
-      receipt_url: "https://markvance.in/payment-status",
+      receipt_url: "https://skeylet.com/payment-status",
       callback_url: "https://api.skeylet.com/api/payments/callback",
-      return_url: `https://markvance.in/payment-status?ref=${reference_id}`,
+      return_url: `https://skeylet.com/payment-status?ref=${reference_id}`,
     };
 
     const encrypted = encryptAES_PHP_STYLE(payloadData, secretKey);
@@ -197,7 +197,7 @@ router.post("/create-payment", async (req, res) => {
 //         await payment.save();
 
 //         if (status !== "SUCCESS") {
-//             return res.redirect("https://markvance.in/payment-failed");
+//             return res.redirect("https://skeylet.com/payment-failed");
 //         // return res.status(200).send("Callback received. Payment failed.");
 //       }
 
@@ -216,7 +216,7 @@ router.post("/create-payment", async (req, res) => {
 //       }
 
 //         // Redirect user to success page
-//         return res.redirect("https://markvance.in/payment-success");
+//         return res.redirect("https://skeylet.com/payment-success");
 //         // return res.status(200).send("Callback received and processed successfully.");
 //     } catch (err) {
 //         console.error("Callback Error:", err);
@@ -276,7 +276,7 @@ router.post("/callback", async (req, res) => {
     console.log("💾 Payment Updated:", payment.status);
 
     if (payment.status !== "active") {
-      return res.redirect("https://markvance.in/payment-failed");
+      return res.redirect("https://skeylet.com/payment-failed");
     }
 
     // Activate subscription
@@ -294,7 +294,7 @@ router.post("/callback", async (req, res) => {
     }
 
     console.log("🎉 Success, redirecting user!");
-    return res.redirect("https://markvance.in/payment-success");
+    return res.redirect("https://skeylet.com/payment-success");
 
   } catch (err) {
     console.error("🔥 Callback Error:", err);
