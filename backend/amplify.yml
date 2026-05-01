@@ -1,0 +1,18 @@
+version: 1
+backend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - echo "No build step for backend"
+  artifacts:
+    # IMPORTANT: For backend apps, baseDirectory MUST be "."
+    baseDirectory: .
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+  startCommand: "npm start"
