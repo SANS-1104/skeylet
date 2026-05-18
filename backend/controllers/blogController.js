@@ -34,7 +34,7 @@ export async function generateBlog(req, res) {
       wordCount,
       customPrompt,
       language = "english",
-      tone = "professional",
+      tone = "Professional",
       viralityScore = 50,
       linkedinAutoPost,
       redditAutoPost,
@@ -196,7 +196,7 @@ export async function generateBlog(req, res) {
 
 // ------------------ Generate Blog (No Auto-Post) ------------------
 export async function generateBlogOnly(req, res) {
-  const { topic, wordCount, tone = "professional", language = "english", imageOption, viralityScore = 5 } = req.body;
+  const { topic, wordCount, tone = "Professional", language = "english", imageOption, viralityScore = 5 } = req.body;
 
   const payload = topic
     ? { topic, wordCount, language, tone, viralityScore }
@@ -496,7 +496,14 @@ export async function promptOptimizer(req, res) {
     }
 
     // ✅ STEP 3: Generate Blog
-    const blogContent = await generateBlog(finalPrompt);
+    const response = await axios.post(
+      "https://lavi0105.app.n8n.cloud/webhook/generatePost",
+      {
+        customPrompt: finalPrompt
+      }
+    );
+
+    const blogContent = response.data;
 
     // ✅ STEP 4: Response
     return res.status(200).json({
