@@ -80,7 +80,8 @@ import {
   getTopicSuggestions,
   updateBlogById,
   deleteBlogById,
-  generateBlogOnly
+  generateBlogOnly,
+  promptOptimizer
 } from "../controllers/blogController.js";
 import {
   scheduleLinkedInPost,
@@ -97,6 +98,7 @@ import {generateImage} from "../controllers/imageController.js"
 
 const router = Router();
 router.post("/generate-blog", authMiddleware, generateBlog);
+router.post("/prompt-optimizer", promptOptimizer);
 router.post("/blogs", authMiddleware,  createBlogPost);
 router.post("/schedule", authMiddleware,  scheduleLinkedInPost);
 router.post("/generate-blog-only", authMiddleware, generateBlogOnly);

@@ -68,3 +68,173 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+
+## Frontend Folder Structure
+
+frontend/
+├── .gitignore
+├── README.md
+├── package.json
+├── package-lock.json
+├── postcss.config.js
+├── tailwind.config.js
+│
+├── public/
+│   ├── favicon.ico
+│   ├── index.html
+│   ├── logo.png
+│   ├── manifest.json
+│   ├── robots.txt
+│   ├── images/
+│   └── video/
+│
+└── src/
+    ├── App.css
+    ├── App.js
+    ├── App.test.js
+    ├── index.css
+    ├── index.js
+    ├── globals.css
+    ├── logo.svg
+    ├── reportWebVitals.js
+    ├── setupTests.js
+    │
+    ├── AUTH/
+    │   ├── auth.css
+    │   ├── AuthPage.jsx
+    │   ├── DashboardAuthProtect.jsx
+    │   ├── Login.jsx
+    │   ├── LoginSuccess.jsx
+    │   ├── PrivateRoute.jsx
+    │   ├── Signup.jsx
+    │   ├── SuperAdminAuthContext.jsx
+    │   └── SuperAdminPrivateRoute.jsx
+    │
+    ├── Navbar/
+    │   └── AuthContext.jsx
+    │
+    ├── STUDIO/
+    │   ├── LANDING-PAGE/
+    │   │   ├── BenefitsSection.jsx
+    │   │   ├── CheckoutPage.jsx
+    │   │   ├── FeaturesSection.jsx
+    │   │   ├── FinalCTASection.jsx
+    │   │   ├── Footer.jsx
+    │   │   ├── HeroSection.jsx
+    │   │   ├── LandingPage.jsx
+    │   │   ├── PaymentFailed.jsx
+    │   │   ├── PaymentStatusPage.jsx
+    │   │   ├── PaymentSuccess.jsx
+    │   │   ├── PricingSection.jsx
+    │   │   ├── ProductPreviewSection.jsx
+    │   │   ├── TestimonialsSection.jsx
+    │   │   ├── UseCasesSection.jsx
+    │   │   ├── figma/
+    │   │   │   └── ImageWithFallback.jsx
+    │   │   └── ui/
+    │   │       ├── accordion.jsx
+    │   │       ├── alert.jsx
+    │   │       ├── alert-dialog.jsx
+    │   │       ├── aspect-ratio.jsx
+    │   │       ├── avatar.jsx
+    │   │       ├── badge.jsx
+    │   │       ├── breadcrumb.jsx
+    │   │       ├── button.jsx
+    │   │       ├── calendar.jsx
+    │   │       ├── card.jsx
+    │   │       ├── carousel.jsx
+    │   │       ├── chart.jsx
+    │   │       ├── checkbox.jsx
+    │   │       ├── collapsible.jsx
+    │   │       ├── command.jsx
+    │   │       ├── context-menu.jsx
+    │   │       ├── dialog.jsx
+    │   │       ├── drawer.jsx
+    │   │       ├── dropdown-menu.jsx
+    │   │       ├── form.jsx
+    │   │       ├── hover-card.jsx
+    │   │       ├── input.jsx
+    │   │       ├── input-otp.jsx
+    │   │       ├── label.jsx
+    │   │       ├── menubar.jsx
+    │   │       ├── navigation-menu.jsx
+    │   │       ├── pagination.jsx
+    │   │       ├── popover.jsx
+    │   │       ├── progress.jsx
+    │   │       ├── radio-group.jsx
+    │   │       ├── resizable.jsx
+    │   │       ├── scroll-area.jsx
+    │   │       ├── select.jsx
+    │   │       ├── separator.jsx
+    │   │       ├── sheet.jsx
+    │   │       ├── sidebar.jsx
+    │   │       ├── skeleton.jsx
+    │   │       ├── slider.jsx
+    │   │       ├── sonner.jsx
+    │   │       ├── switch.jsx
+    │   │       ├── table.jsx
+    │   │       ├── tabs.jsx
+    │   │       ├── textarea.jsx
+    │   │       ├── toggle.jsx
+    │   │       ├── toggle-group.jsx
+    │   │       ├── tooltip.jsx
+    │   │       ├── use-mobile.js
+    │   │       └── utils.js
+    │   │
+    │   ├── LP2/
+    │   │   ├── BenefitsSection.jsx
+    │   │   ├── FeaturesSection.jsx
+    │   │   ├── FinalCTASection.jsx
+    │   │   ├── Footer.jsx
+    │   │   ├── Header.jsx
+    │   │   ├── Header2.jsx
+    │   │   ├── HeroSection.jsx
+    │   │   ├── HowItWorksSection.jsx
+    │   │   ├── LP2HomePage.jsx
+    │   │   ├── LoggedInCTASection.jsx
+    │   │   ├── LoggedInHeader.jsx
+    │   │   ├── LoggedInHeroSection.jsx
+    │   │   ├── PlatformToggle.jsx
+    │   │   ├── PricingSection.jsx
+    │   │   ├── PrivacyPolicy.jsx
+    │   │   ├── ProductPreviewSection.jsx
+    │   │   ├── RefundPolicy.jsx
+    │   │   ├── StatsSection.jsx
+    │   │   ├── TermsOfService.jsx
+    │   │   ├── TestimonialsSection.jsx
+    │   │   └── UseCasesSection.jsx
+    │   │
+    │   ├── StudioSuperAdmin/
+    │   │   ├── superadmin.css
+    │   │   ├── StudioSuperAdminDashboard.jsx
+    │   │   ├── StudioSuperAdminDashboardSidebar.jsx
+    │   │   ├── StudioSuperAdminLoginPage.jsx
+    │   │   ├── StudioSuperAdminSampleContent.jsx
+    │   │   ├── PlanManagement/
+    │   │   │   └── PlanManagement.jsx
+    │   │   └── UserManagement/
+    │   │       └── UserManagement.jsx
+    │   │
+    │   └── USER/
+    │       ├── AnalyticsCharts.jsx
+    │       ├── AnalyticsPage.jsx
+    │       ├── CalendarPage.jsx
+    │       ├── CreateBlogPage.jsx
+    │       ├── Dashboard.jsx
+    │       ├── DashboardHeader.jsx
+    │       ├── DashboardOverview.jsx
+    │       ├── DraftsSidebar.jsx
+    │       ├── PostsPage.jsx
+    │       └── ProfilePage.jsx
+    │
+    ├── api/
+    │   └── axiosClient.js
+    │
+    ├── data/
+    │   └── subreddits.json
+    │
+    └── utils/
+        ├── auth.js
+        ├── formatCurrency.js
+        └── formatDate.js

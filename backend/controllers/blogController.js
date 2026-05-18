@@ -3,6 +3,7 @@ import axios from "axios";
 import User from "../models/User.js";
 import Post from "../models/Post.js";
 import { postToLinkedIn } from "../utils/postToLinkedIn.js";
+import { optimizePrompt } from "../utils/promptOptimizer.js";
 
 // ------------------ Topic Suggestion using Gemini ------------------
 export async function getTopicSuggestions(req, res) {
@@ -25,75 +26,7 @@ export async function getTopicSuggestions(req, res) {
   }
 }
 
-// // ------------------ Generate Blog ------------------
-// export async function generateBlog(req, res) {
-//   try {
-//     const { topic, wordCount, language = "english", tone = "professional", viralityScore = 50, status: payloadStatus } = req.body;
-//     const user = await User.findById(req.user.id);
-
-//     // ---- SaaS subscription check ----
-//     // if (user.subscriptionStatus !== "active") {
-//     //   return res.status(403).json({ error: "Subscription inactive. Please renew your plan." });
-//     // }
-//     // if (user.usageCount >= user.monthlyQuota) {
-//     //   return res.status(403).json({ error: "Monthly quota exceeded. Upgrade your plan to continue posting." });
-//     // }
-
-//     // ---- Generate content ----
-//     const payload = topic ? { topic, wordCount, language, tone, viralityScore } : { language, tone, viralityScore };
-//     const response = await axios.post("https://lavi0105.app.n8n.cloud/webhook/generatePost", payload);
-//     const blogData = response.data;
-
-//     const title = blogData.video_title || blogData.title || topic || "Generated Blog";
-//     const content = blogData.script || blogData.generated_text || "";
-//     let imageUrl = blogData.image || blogData.picture || req.body.image || null;
-
-//     // ---- Auto-post if enabled ----
-//     let linkedInPosted = false;
-//     let linkedinPostId = null;
-//     let linkedInUrl = null;
-
-//     if (user.autoPostToLinkedIn && user.linkedinAccessToken && user.linkedinPersonURN && content.trim()) {
-//       try {
-//         const result = await postToLinkedIn(user, { title, content, image: imageUrl });
-//         linkedinPostId = result.postId;
-//         linkedInUrl = result.url || null;
-//         linkedInPosted = true;
-//       } catch (err) {
-//         console.error("LinkedIn auto-post failed:", err.message);
-//       }
-//     }
-
-//     // ---- Save post ----
-//     const post = await Post.create({
-//       user: user._id,
-//       title,
-//       content,
-//       image: imageUrl,
-//       viralityScore: Number(viralityScore),
-//       platforms: {
-//         linkedin: {
-//           status: linkedInPosted ? "posted" : payloadStatus || "draft",
-//           scheduledTime: null,
-//           postedAt: linkedInPosted ? new Date() : null,
-//           postId: linkedinPostId,
-//           url: linkedInUrl,
-//           extra: {},
-//         }
-//       }
-//     });
-
-//     // ---- Increment usage count ----
-//     user.usageCount += 1;
-//     await user.save();
-
-//     res.json({ ...blogData, image: imageUrl, linkedInPosted });
-//   } catch (err) {
-//     console.error("Blog generation error:", err.response?.data || err.message);
-//     res.status(500).json({ error: "Blog generation failed" });
-//   }
-// }
-
+// ------------------ Generate Blog ------------------
 export async function generateBlog(req, res) {
   try {
     const {
@@ -127,8 +60,33 @@ export async function generateBlog(req, res) {
       return res.status(403).json({ error: "You reached your monthly post limit." });
     }
 
+    // ---------- Optimize Prompt (NEW) ----------
+    let finalCustomPrompt = customPrompt;
+
+    if (customPrompt && customPrompt.trim()) {
+      try {
+        const optimized = await optimizePrompt(customPrompt, tone, "Medium");
+        if (optimized.success) {
+          finalCustomPrompt = optimized.optimized_prompt;
+        }
+      } catch (err) {
+        console.error("Prompt optimization failed:", err.message);
+      }
+    }
+
     // ---------- Generate content ----------
-    const payload = topic ? { topic, wordCount, language, tone, viralityScore, ...(customPrompt && { customPrompt }) } : { language, tone, viralityScore };
+    const hasTopic = topic && topic.trim().length > 0;
+    // const payload = hasTopic ? { topic, wordCount, language, tone, viralityScore, ...(customPrompt && { customPrompt }) } : { language, tone, viralityScore };
+    const payload = hasTopic
+      ? {
+        topic,
+        wordCount,
+        language,
+        tone,
+        viralityScore,
+        ...(finalCustomPrompt && { customPrompt: finalCustomPrompt })
+      }
+      : { language, tone, viralityScore };
     const response = await axios.post("https://lavi0105.app.n8n.cloud/webhook/generatePost", payload);
     const blogData = response.data || {};
 
@@ -235,7 +193,6 @@ export async function generateBlog(req, res) {
     res.status(500).json({ error: "Blog generation failed" });
   }
 }
-
 
 // ------------------ Generate Blog (No Auto-Post) ------------------
 export async function generateBlogOnly(req, res) {
@@ -427,3 +384,136 @@ export const deleteBlogById = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+// Prompt Optimizer
+
+// export async function promptOptimizerController(req, res) {
+//   try {
+//     const {
+//       topic,
+//       customPrompt,
+//       trendingTopic,
+//       tone = 'professional',
+//       length = 'medium',
+//       optimize = true
+//     } = req.body;
+
+//     // ✅ STEP 1: Decide base input (VERY IMPORTANT FIX)
+//     let baseInput;
+
+//     if (customPrompt && customPrompt.trim()) {
+//       baseInput = customPrompt;
+//     } else if (topic && topic.trim()) {
+//       baseInput = topic;
+//     } else if (trendingTopic && trendingTopic.trim()) {
+//       baseInput = trendingTopic;
+//     } else {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'No valid input provided'
+//       });
+//     }
+
+//     let finalPrompt = baseInput;
+//     let wasOptimized = false;
+
+//     // ✅ STEP 2: Run Prompt Optimizer
+//     if (optimize) {
+//       const result = await optimizePrompt(baseInput, tone, length);
+
+//       if (result.success) {
+//         finalPrompt = result.optimized_prompt;
+//         wasOptimized = true;
+//       }
+//     }
+
+//     // ✅ STEP 3: Generate blog using YOUR existing logic
+//     // const blogContent = await generateBlog(finalPrompt);
+//     const response = await axios.post("https://lavi0105.app.n8n.cloud/webhook/generatePost", {
+//       customPrompt: finalPrompt
+//     });
+
+//     const blogContent = response.data;
+
+//     // ✅ STEP 4: Response
+//     return res.status(200).json({
+//       success: true,
+//       blog: blogContent,
+//       original_input: baseInput,
+//       optimized_prompt: finalPrompt,
+//       was_optimized: wasOptimized
+//     });
+
+//   } catch (error) {
+//     console.error('[PromptOptimizer Error]', error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: 'Failed to generate blog',
+//       error: error.message
+//     });
+//   }
+// }
+export async function promptOptimizer(req, res) {
+  try {
+    const {
+      topic,
+      customPrompt,
+      trendingTopic,
+      tone = "Professional",
+      length = "Medium",
+      optimize = true
+    } = req.body;
+
+    // ✅ STEP 1: Decide base input
+    let baseInput;
+
+    if (customPrompt && customPrompt.trim()) {
+      baseInput = customPrompt;
+    } else if (topic && topic.trim()) {
+      baseInput = topic;
+    } else if (trendingTopic && trendingTopic.trim()) {
+      baseInput = trendingTopic;
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'No valid input provided'
+      });
+    }
+
+    let finalPrompt = baseInput;
+    let wasOptimized = false;
+
+    // ✅ STEP 2: Optimize Prompt
+    if (optimize) {
+      const result = await optimizePrompt(baseInput, tone, length);
+
+      if (result.success) {
+        finalPrompt = result.optimized_prompt;
+        wasOptimized = true;
+      }
+    }
+
+    // ✅ STEP 3: Generate Blog
+    const blogContent = await generateBlog(finalPrompt);
+
+    // ✅ STEP 4: Response
+    return res.status(200).json({
+      success: true,
+      blog: blogContent,
+      original_input: baseInput,
+      optimized_prompt: finalPrompt,
+      was_optimized: wasOptimized
+    });
+
+  } catch (error) {
+    console.error('[PromptOptimizer Controller Error]', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate blog',
+      error: error.message
+    });
+  }
+}

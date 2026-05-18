@@ -20,6 +20,8 @@ export function CreateBlogPage() {
   const [topic, setTopic] = useState("")
   const [content, setContent] = useState("")
   const [customPrompt, setCustomPrompt] = useState("")
+  const [showOptimizerBubble, setShowOptimizerBubble] = useState(false);
+  const [optimizedPrompt, setOptimizedPrompt] = useState("");
   const [language, setLanguage] = useState("english")
   const [tone, setTone] = useState("Professional")
   const [selectTopic, setSelectTopic] = useState("Technology")
@@ -168,83 +170,124 @@ export function CreateBlogPage() {
     }
   };
 
+  useEffect(() => {
+    if (customPrompt && customPrompt.trim().length > 10) {
+      setShowOptimizerBubble(true);
+    } else {
+      setShowOptimizerBubble(false);
+    }
+  }, [customPrompt]);
+
+  const handleOptimizePrompt = async () => {
+    try {
+      const res = await axiosClient.post("/prompt-optimizer", {
+        customPrompt,
+        tone: tone,
+        length: "Medium",
+        optimize: true
+      });
+
+      if (res.data.success) {
+        setCustomPrompt(res.data.optimized_prompt);
+        setOptimizedPrompt(res.data.optimized_prompt);
+        toast.success("Prompt enhanced 🚀");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to optimize prompt");
+    }
+  };
+
   const [generatedByAI, setGeneratedByAI] = useState(false);
 
+  const formatPromptForN8n = (prompt) => {
+    if (!prompt) return "";
+
+    return prompt
+      .replace(/\\/g, "\\\\")     // escape backslashes
+      .replace(/"/g, '\\"')       // escape double quotes
+      .replace(/`/g, "'")         // replace backticks (very important)
+      .replace(/\n+/g, " ")       // remove newlines
+      .replace(/\t+/g, " ")       // remove tabs
+      .replace(/\s+/g, " ")       // multiple spaces → one
+      .trim();
+  };
+
   const handleGenerate = async () => {
-  if (!topic.trim() && postMode === "custom") {
-    toast.error("Please enter a topic");
-    return;
-  }
-  setLoading(true);
-
-  try {
-    const res = await axiosClient.post("/generate-blog", {
-      topic,
-      content,
-      language,
-      tone,
-      customPrompt,
-      image,
-      wordCount,
-      viralityScore,
-      linkedinAutoPost,
-      redditAutoPost,
-      facebookAutoPost,
-      selectedSubreddit,
-      selectedFlair,
-      selectedFacebookPages,
-    });
-
-    const data = res.data;
-
-    // Update frontend fields with returned content
-    if (data.title || data.video_title) setTopic(data.title || data.video_title);
-    if (data.script || data.generated_text) setContent(data.script || data.generated_text);
-    if (data.picture || data.image) setImage(data.picture || data.image);
-
-    setOutput(data);
-    setGeneratedByAI(true);
-
-    toast.success("Blog generated successfully");
-
-    // ------------------ Handle Multi-Platform Auto-Post ------------------
-    const postedPlatforms = [];
-
-    // LinkedIn
-    if (data.linkedInPosted || data.platforms?.linkedin?.status === "posted") {
-      postedPlatforms.push("LinkedIn");
+    if (!topic.trim() && postMode === "custom") {
+      toast.error("Please enter a topic");
+      return;
     }
+    setLoading(true);
 
-    // Reddit
-    if (data.platforms?.reddit?.status === "posted") {
-      postedPlatforms.push(`Reddit (r/${selectedSubreddit})`);
+    try {
+      const res = await axiosClient.post("/generate-blog", {
+        topic,
+        content,
+        language,
+        tone,
+        customPrompt: formatPromptForN8n(customPrompt),
+        image,
+        wordCount,
+        viralityScore,
+        linkedinAutoPost,
+        redditAutoPost,
+        facebookAutoPost,
+        selectedSubreddit,
+        selectedFlair,
+        selectedFacebookPages,
+      });
+
+      const data = res.data;
+
+      // Update frontend fields with returned content
+      if (data.title || data.video_title) setTopic(data.title || data.video_title);
+      if (data.script || data.generated_text) setContent(data.script || data.generated_text);
+      if (data.picture || data.image) setImage(data.picture || data.image);
+
+      setOutput(data);
+      setGeneratedByAI(true);
+
+      toast.success("Blog generated successfully");
+
+      // ------------------ Handle Multi-Platform Auto-Post ------------------
+      const postedPlatforms = [];
+
+      // LinkedIn
+      if (data.linkedInPosted || data.platforms?.linkedin?.status === "posted") {
+        postedPlatforms.push("LinkedIn");
+      }
+
+      // Reddit
+      if (data.platforms?.reddit?.status === "posted") {
+        postedPlatforms.push(`Reddit (r/${selectedSubreddit})`);
+      }
+
+      // Facebook
+      if (data.platforms?.facebook?.status === "posted") {
+        postedPlatforms.push(
+          `Facebook (${selectedFacebookPages.length} page${selectedFacebookPages.length > 1 ? "s" : ""})`
+        );
+      }
+
+      if (postedPlatforms.length > 0) {
+        toast.success(`Successfully auto-posted to: ${postedPlatforms.join(", ")}`, { autoClose: 3000 });
+      }
+
+    } catch (err) {
+      console.error("Blog generation failed:", err.response?.data || err.message);
+
+      // Handle quota exceeded
+      const quotaMsg = err.response?.data?.error || err.response?.data?.msg;
+      if (quotaMsg?.toLowerCase().includes("limit") || quotaMsg?.toLowerCase().includes("quota")) {
+        toast.error(quotaMsg, { autoClose: 2000 });
+      } else {
+        toast.error("Failed to generate blog");
+      }
+    } finally {
+      setLoading(false);
     }
-
-    // Facebook
-    if (data.platforms?.facebook?.status === "posted") {
-      postedPlatforms.push(
-        `Facebook (${selectedFacebookPages.length} page${selectedFacebookPages.length > 1 ? "s" : ""})`
-      );
-    }
-
-    if (postedPlatforms.length > 0) {
-      toast.success(`Successfully auto-posted to: ${postedPlatforms.join(", ")}`, { autoClose: 3000 });
-    }
-
-  } catch (err) {
-    console.error("Blog generation failed:", err.response?.data || err.message);
-
-    // Handle quota exceeded
-    const quotaMsg = err.response?.data?.error || err.response?.data?.msg;
-    if (quotaMsg?.toLowerCase().includes("limit") || quotaMsg?.toLowerCase().includes("quota")) {
-      toast.error(quotaMsg, { autoClose: 2000 });
-    } else {
-      toast.error("Failed to generate blog");
-    }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   const [currentDraftId, setCurrentDraftId] = useState(null);
@@ -493,120 +536,120 @@ export function CreateBlogPage() {
   }, [redditAutoPost, topic, content, selectedSubreddit, selectedFlair]);
 
   // --- Facebook Related States ---
-  
+
   const [facebookAutoPost, setFacebookAutoPost] = useState(false);
   const [facebookPages, setFacebookPages] = useState([]);
   const [selectedFacebookPages, setSelectedFacebookPages] = useState([]);
 
   // --- Fetch Facebook Pages ---
-useEffect(() => {
-  const fetchFacebookPages = async () => {
-    try {
-      const res = await axiosClient.get("/facebook/pages");
-      setFacebookPages(res.data.pages || []);
-    } catch (err) {
-      console.error("Failed to fetch Facebook pages:", err);
-      toast.error("Failed to fetch Facebook pages");
-    }
-  };
-  fetchFacebookPages();
-}, []);
+  useEffect(() => {
+    const fetchFacebookPages = async () => {
+      try {
+        const res = await axiosClient.get("/facebook/pages");
+        setFacebookPages(res.data.pages || []);
+      } catch (err) {
+        console.error("Failed to fetch Facebook pages:", err);
+        toast.error("Failed to fetch Facebook pages");
+      }
+    };
+    fetchFacebookPages();
+  }, []);
 
 
   // --- Toggle Handler for Facebook Auto-Post ---
-const handleFacebookAutoPostToggle = async () => {
-  const newValue = !facebookAutoPost;
-  try {
-    await axiosClient.put("/facebook/preferences", { facebookAutoPost: newValue });
-    setFacebookAutoPost(newValue);
-    toast.success(`Facebook auto-post ${newValue ? "enabled" : "disabled"}`, { autoClose: 1000 });
-  } catch (err) {
-    console.error("Failed to update Facebook auto-post:", err);
-    toast.error("Failed to update Facebook auto-post");
-  }
-};
+  const handleFacebookAutoPostToggle = async () => {
+    const newValue = !facebookAutoPost;
+    try {
+      await axiosClient.put("/facebook/preferences", { facebookAutoPost: newValue });
+      setFacebookAutoPost(newValue);
+      toast.success(`Facebook auto-post ${newValue ? "enabled" : "disabled"}`, { autoClose: 1000 });
+    } catch (err) {
+      console.error("Failed to update Facebook auto-post:", err);
+      toast.error("Failed to update Facebook auto-post");
+    }
+  };
 
 
-// ------------------ Facebook Manual Post ------------------
-const handleManualFacebookPost = async () => {
-  if (!topic || !content) {
-    toast.error("No content available to post");
-    return;
-  }
+  // ------------------ Facebook Manual Post ------------------
+  const handleManualFacebookPost = async () => {
+    if (!topic || !content) {
+      toast.error("No content available to post");
+      return;
+    }
 
-  if (!selectedFacebookPages.length) {
-    toast.error("Please select at least one Facebook page");
-    return;
-  }
+    if (!selectedFacebookPages.length) {
+      toast.error("Please select at least one Facebook page");
+      return;
+    }
 
-  try {
-    // Step 1️⃣: Create or update unified draft post
-    const createRes = await axiosClient.post("/unifiedPost/create", {
-      postId: currentDraftId || undefined,
-      title: topic || "Untitled Draft",
-      topic: selectTopic || "General",
-      content,
-      image: image || "",
-      viralityScore,
-      platform: "facebook", // ✅ REQUIRED FIELD
-      extra: { pageIds: selectedFacebookPages },
-    });
+    try {
+      // Step 1️⃣: Create or update unified draft post
+      const createRes = await axiosClient.post("/unifiedPost/create", {
+        postId: currentDraftId || undefined,
+        title: topic || "Untitled Draft",
+        topic: selectTopic || "General",
+        content,
+        image: image || "",
+        viralityScore,
+        platform: "facebook", // ✅ REQUIRED FIELD
+        extra: { pageIds: selectedFacebookPages },
+      });
 
-    const post = createRes.data.post;
-    setCurrentDraftId(post._id);
+      const post = createRes.data.post;
+      setCurrentDraftId(post._id);
 
-    // Step 2️⃣: Post manually to Facebook (multi-page support)
-    await axiosClient.post("/unifiedPost/manualPost", {
-      postId: post._id,
-      platform: "facebook", // ✅ REQUIRED FIELD
-      selectedPages: selectedFacebookPages, // ✅ send array of IDs
-    });
+      // Step 2️⃣: Post manually to Facebook (multi-page support)
+      await axiosClient.post("/unifiedPost/manualPost", {
+        postId: post._id,
+        platform: "facebook", // ✅ REQUIRED FIELD
+        selectedPages: selectedFacebookPages, // ✅ send array of IDs
+      });
 
-    toast.success("Posted to all selected Facebook pages successfully!");
-  } catch (err) {
-    console.error("❌ Facebook post failed:", err);
-    toast.error(err.response?.data?.error || "Failed to post on Facebook");
-  }
-};
+      toast.success("Posted to all selected Facebook pages successfully!");
+    } catch (err) {
+      console.error("❌ Facebook post failed:", err);
+      toast.error(err.response?.data?.error || "Failed to post on Facebook");
+    }
+  };
 
 
-// ------------------ Facebook Auto-Post Effect ------------------
-useEffect(() => {
-  if (facebookAutoPost && topic && content && selectedFacebookPages.length > 0) {
-    (async () => {
-      try {
-        const createRes = await axiosClient.post("/unifiedPost/create", {
-          postId: currentDraftId,
-          title: topic || "Untitled Draft",
-          topic: selectTopic || "General",
-          content,
-          image: image || "",
-          viralityScore,
-          platform: "facebook",
-          extra: { pageIds: selectedFacebookPages },
-        });
+  // ------------------ Facebook Auto-Post Effect ------------------
+  useEffect(() => {
+    if (facebookAutoPost && topic && content && selectedFacebookPages.length > 0) {
+      (async () => {
+        try {
+          const createRes = await axiosClient.post("/unifiedPost/create", {
+            postId: currentDraftId,
+            title: topic || "Untitled Draft",
+            topic: selectTopic || "General",
+            content,
+            image: image || "",
+            viralityScore,
+            platform: "facebook",
+            extra: { pageIds: selectedFacebookPages },
+          });
 
-        const post = createRes.data.post;
-        setCurrentDraftId(post._id);
+          const post = createRes.data.post;
+          setCurrentDraftId(post._id);
 
-        await Promise.all(
-          selectedFacebookPages.map((pageId) =>
-            axiosClient.post("/unifiedPost/manualPost", {
-              postId: post._id,
-              platform: "facebook",
-              extra: { pageId },
-            })
-          )
-        );
+          await Promise.all(
+            selectedFacebookPages.map((pageId) =>
+              axiosClient.post("/unifiedPost/manualPost", {
+                postId: post._id,
+                platform: "facebook",
+                extra: { pageId },
+              })
+            )
+          );
 
-        toast.success("Auto-posted to selected Facebook pages successfully!");
-      } catch (err) {
-        console.error("❌ Auto-post to Facebook failed:", err);
-        toast.error("Auto-post to Facebook failed");
-      }
-    })();
-  }
-}, [facebookAutoPost, topic, content, selectedFacebookPages]);
+          toast.success("Auto-posted to selected Facebook pages successfully!");
+        } catch (err) {
+          console.error("❌ Auto-post to Facebook failed:", err);
+          toast.error("Auto-post to Facebook failed");
+        }
+      })();
+    }
+  }, [facebookAutoPost, topic, content, selectedFacebookPages]);
 
 
   return (
@@ -711,21 +754,58 @@ useEffect(() => {
                   )}
                 </div>
               )}
+              {postMode === "custom" && (
+                <div className="space-y-2 mt-4 relative">
+                <Label htmlFor="content">Custom Prompt (Optional)</Label>
 
-              <div className="space-y-2 mt-4">
-                <Label htmlFor="content">Custom Prompt (Optional) </Label>
                 <Textarea
                   id="content"
                   placeholder="Write your Custom Prompt..."
                   value={customPrompt}
                   onChange={(e) => {
                     setCustomPrompt(e.target.value);
-                    setGeneratedByAI(false); // user edited, so allow manual draft saving again
+                    setGeneratedByAI(false);
                   }}
-                  className="min-h-48 resize-none text-base lg:text-lg leading-relaxed focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="min-h-48 resize-none text-base lg:text-lg leading-relaxed focus-visible:ring-2 focus-visible:ring-blue-500 pr-32"
                 />
-              </div>
 
+                {/* ✅ Button INSIDE textarea box */}
+                {showOptimizerBubble && (
+                  <button
+                    onClick={handleOptimizePrompt}
+                    className="absolute top-6 right-3 flex items-center gap-1 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-3 py-1.5 rounded-md text-sm shadow-md hover:scale-105 transition"
+                  >
+                    ✨ Enhance Prompt
+                  </button>
+                )}
+              </div>
+                
+              )}
+
+              {/* <div className="space-y-2 mt-4 relative">
+                <Label htmlFor="content">Custom Prompt (Optional)</Label>
+
+                <Textarea
+                  id="content"
+                  placeholder="Write your Custom Prompt..."
+                  value={customPrompt}
+                  onChange={(e) => {
+                    setCustomPrompt(e.target.value);
+                    setGeneratedByAI(false);
+                  }}
+                  className="min-h-48 resize-none text-base lg:text-lg leading-relaxed focus-visible:ring-2 focus-visible:ring-blue-500 pr-32"
+                />
+
+                
+                {showOptimizerBubble && (
+                  <button
+                    onClick={handleOptimizePrompt}
+                    className="absolute top-6 right-3 flex items-center gap-1 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-3 py-1.5 rounded-md text-sm shadow-md hover:scale-105 transition"
+                  >
+                    ✨ Enhance Prompt
+                  </button>
+                )}
+              </div> */}
 
               {/* Content Area */}
               <div className="space-y-2 mt-4">
@@ -864,7 +944,7 @@ useEffect(() => {
               <div className="">
                 <div className="">
                   <div className="space-y-1 pb-4"><Label>Select a Subreddit</Label></div>
-                  
+
                   <select
                     className="border p-2 w-full mb-4"
                     value={selectedSubreddit}
@@ -1099,8 +1179,8 @@ useEffect(() => {
               <div className="space-y-3">
                 <Button
                   className={`w-full gap-2 shadow-lg transition-all duration-300 ${linkedinAutoPost
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl"
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl"
                     }`}
                   onClick={handleManualLinkedInPost}
                   disabled={linkedinAutoPost}
@@ -1111,8 +1191,8 @@ useEffect(() => {
 
                 <Button
                   className={`w-full gap-2 shadow-lg transition-all duration-300 ${redditAutoPost
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-red-400 to-red-500 hover:from-red-600 hover:to-red-700 hover:shadow-xl"
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-red-400 to-red-500 hover:from-red-600 hover:to-red-700 hover:shadow-xl"
                     }`}
                   onClick={handlePostToReddit}
                   disabled={!selectedSubreddit && redditAutoPost}
@@ -1166,8 +1246,8 @@ useEffect(() => {
 
                 <Button
                   className={`w-full gap-2 shadow-lg transition-all duration-300 ${facebookAutoPost
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-blue-300 to-blue-400 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl"
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-blue-300 to-blue-400 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl"
                     }`}
                   onClick={handleManualFacebookPost}
                   disabled={facebookAutoPost}
